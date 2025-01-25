@@ -3,7 +3,27 @@ import { ref, computed, watch } from "vue";
 import moment from "moment";
 
 const mainTime = ref(24);
+const needToShowCanadianDate = ref(null);
+const needToShowUkrainianDate = ref(null);
+const needToShowPolandDate = ref(null);
+
 const date = ref(moment().format("YYYY-MM-DD"));
+const canadianDate = computed(() =>
+  moment(date.value)
+    .add(needToShowCanadianDate.value, "days")
+    .format("YYYY-MM-DD"),
+);
+const polandDate = computed(() =>
+  moment(date.value)
+    .add(needToShowPolandDate.value, "days")
+    .format("YYYY-MM-DD"),
+);
+const ukrainianDate = computed(() =>
+  moment(date.value)
+    .add(needToShowUkrainianDate.value, "days")
+    .format("YYYY-MM-DD"),
+);
+
 const disFormatted = computed(() => {
   return `<t:${moment(date.value)
     .add(mainTime.value * 30, "minutes")
@@ -17,6 +37,9 @@ const canadaTime = computed(() => {
 
   if (canadaTime < 0) {
     canadaTime = canadaTime + 48;
+    needToShowCanadianDate.value = -1;
+  } else {
+    needToShowCanadianDate.value = null;
   }
 
   return canadaTime;
@@ -27,6 +50,9 @@ const polandTime = computed(() => {
 
   if (polandTime > 48) {
     polandTime = polandTime - 48;
+    needToShowPolandDate.value = 1;
+  } else {
+    needToShowPolandDate.value = null;
   }
 
   return polandTime;
@@ -37,6 +63,9 @@ const ukraineTime = computed(() => {
 
   if (ukraineTime > 48) {
     ukraineTime = ukraineTime - 48;
+    needToShowUkrainianDate.value = 1;
+  } else {
+    needToShowUkrainianDate.value = null;
   }
 
   return ukraineTime;
@@ -92,6 +121,12 @@ function copy() {
           class="scale-line-flag-time"
         >
           <div>🇵🇱</div>
+          <div
+            v-if="needToShowPolandDate !== null"
+            class="scale-line-date-time"
+          >
+            {{ polandDate }}
+          </div>
         </div>
 
         <div
@@ -102,6 +137,12 @@ function copy() {
           class="scale-line-flag-time"
         >
           <div>🇺🇦</div>
+          <div
+            v-if="needToShowUkrainianDate !== null"
+            class="scale-line-date-time"
+          >
+            {{ ukrainianDate }}
+          </div>
         </div>
 
         <div v-if="parseInt(mainTime) === i - 1" class="scale-line-flag-time">
@@ -116,6 +157,12 @@ function copy() {
           class="scale-line-flag-time"
         >
           <div>🇨🇦</div>
+          <div
+            v-if="needToShowCanadianDate !== null"
+            class="scale-line-date-time"
+          >
+            {{ canadianDate }}
+          </div>
         </div>
       </div>
     </div>
