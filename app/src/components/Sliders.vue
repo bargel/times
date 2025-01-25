@@ -7,6 +7,7 @@ const date = ref(moment().format("YYYY-MM-DD"));
 const disFormatted = computed(() => {
   return `<t:${moment(date.value)
     .add(mainTime.value * 30, "minutes")
+    .add(new Date().getTimezoneOffset() * -1, "minutes")
     .unix()}:f>`;
 });
 const showCopied = ref(false);

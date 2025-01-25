@@ -7,5 +7,5 @@ services:
     ports:
       - 5173:5173
     working_dir: /app
-    command: bash -c 'npm run dev -- --host 0'
+    command: bash -c 'npm i && npm run dev -- --host 0'
     # tty: true
