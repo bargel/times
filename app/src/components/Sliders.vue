@@ -103,6 +103,12 @@ function copy() {
     showCopied.value = false;
   }, 1000);
 }
+
+function parseTime(time) {
+  const hours = parseInt(time / 2);
+  const minutes = time % 2 === 0 ? "00" : "30";
+  return `${hours}:${minutes}`;
+}
 </script>
 
 <template>
@@ -118,7 +124,7 @@ function copy() {
             (mainTime < 47 && mainTime == i - 3) ||
             (mainTime >= 47 && mainTime - 48 == i - 3)
           "
-          class="scale-line-flag-time"
+          class="scale-line-flag-time poland-flag"
         >
           <div>🇵🇱</div>
           <div
@@ -134,7 +140,7 @@ function copy() {
             (mainTime < 45 && mainTime == i - 5) ||
             (mainTime >= 45 && mainTime - 48 == i - 5)
           "
-          class="scale-line-flag-time"
+          class="scale-line-flag-time ukraine-flag"
         >
           <div>🇺🇦</div>
           <div
@@ -154,7 +160,7 @@ function copy() {
             (mainTime < 16 && parseInt(mainTime) + 48 == i + 15) ||
             (mainTime >= 16 && mainTime == i + 15)
           "
-          class="scale-line-flag-time"
+          class="scale-line-flag-time canada-flag"
         >
           <div>🇨🇦</div>
           <div
@@ -199,6 +205,34 @@ function copy() {
     />
   </div>
 
+  <div class="mobile-info">
+    <div>
+      <span>🇨🇦 Canada:</span>
+      {{
+        parseTime(mainTime < 16 ? parseInt(mainTime) + 48 - 16 : mainTime - 16)
+      }}
+      - {{ canadianDate }}
+    </div>
+    <div>
+      <span>🇺🇦 Ukraine:</span>
+      {{
+        parseTime(
+          mainTime > 44 ? parseInt(mainTime - 48) + 4 : parseInt(mainTime) + 4,
+        )
+      }}
+      - {{ ukrainianDate }}
+    </div>
+    <div>
+      <span>🇵🇱 Poland:</span>
+      {{
+        parseTime(
+          mainTime > 46 ? parseInt(mainTime) - 48 + 2 : parseInt(mainTime) + 2,
+        )
+      }}
+      - {{ polandDate }}
+    </div>
+  </div>
+
   <div class="center">
     <input class="dis" type="text" v-model="disFormatted" @click="copy" />
     <Transition name="bounce">
@@ -210,6 +244,7 @@ function copy() {
 <style scoped>
 .wrapper {
   position: relative;
+  height: 100px;
 }
 
 .main-input {
@@ -369,6 +404,36 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
   }
   100% {
     transform: translateX(-50%) scale(1);
+  }
+}
+
+@media (max-width: 1024px) {
+  .dis {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .scale-line-time {
+    display: none;
+  }
+
+  .main-input.poland,
+  .main-input.ukraine,
+  .main-input.canada,
+  .poland-flag,
+  .canada-flag,
+  .ukraine-flag {
+    display: none;
+  }
+
+  .scale-line-flag-time {
+    height: 30px;
+  }
+
+  .scale-line-date-time {
+    display: none;
   }
 }
 </style>
