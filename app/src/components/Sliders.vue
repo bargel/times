@@ -94,9 +94,9 @@ watch(mainTime, (val) => {
 });
 
 function copy() {
-  console.log(event.target.select());
-  // textBox.select();
+  event.target.select();
   document.execCommand("copy");
+  event.target.blur();
   showCopied.value = true;
 
   setTimeout(() => {
