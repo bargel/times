@@ -295,6 +295,8 @@ input[type="range"].ukraine::-webkit-slider-thumb {
 }
 
 input[type="range"]::-webkit-slider-thumb {
+  z-index: 2;
+  position: relative;
   -webkit-appearance: none;
   border: none;
   height: 25px;
@@ -319,7 +321,7 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
   position: absolute;
   width: 100%;
   height: 20px;
-  background-color: rgba(255 255 255 / 0.1);
+  background-color: var(--color-background-soft);
   top: 5px;
   justify-content: space-between;
   padding: 0 11px;
@@ -330,7 +332,7 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
   content: "";
   height: 10px;
   width: 1px;
-  background-color: rgba(255 255 255 / 0.6);
+  background-color: var(--color-text-full);
   position: relative;
 }
 
@@ -339,7 +341,8 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
   content: "";
   height: 7px;
   width: 1px;
-  background-color: rgba(255 255 255 / 0.2);
+  background-color: var(--color-text-full-2);
+  z-index: 1;
   position: relative;
 }
 
@@ -470,6 +473,17 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
 
   .copied {
     bottom: 130px;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  input[type="range"]::-webkit-slider-thumb,
+  .scale-line-flag-time {
+    background-color: rgba(0 0 0 / 0.8) !important;
+  }
+
+  .scale-line-time {
+    color: rgba(0 0 0 / 0.8) !important;
   }
 }
 </style>
