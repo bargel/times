@@ -48,7 +48,7 @@ const canadaTime = computed(() => {
 const polandTime = computed(() => {
   let polandTime = parseInt(mainTime.value) + 2;
 
-  if (polandTime > 48) {
+  if (polandTime >= 48) {
     polandTime = polandTime - 48;
     needToShowPolandDate.value = 1;
   } else {
@@ -61,7 +61,7 @@ const polandTime = computed(() => {
 const ukraineTime = computed(() => {
   let ukraineTime = parseInt(mainTime.value) + 4;
 
-  if (ukraineTime > 48) {
+  if (ukraineTime >= 48) {
     ukraineTime = ukraineTime - 48;
     needToShowUkrainianDate.value = 1;
   } else {
@@ -107,13 +107,23 @@ function copy() {
 function parseTime(time) {
   const hours = parseInt(time / 2);
   const minutes = time % 2 === 0 ? "00" : "30";
-  return `${hours}:${minutes}`;
+
+  if (hours === 0 || hours === 24) {
+    return `12:${minutes}AM (00:${minutes})`;
+  } else if (hours < 12) {
+    return `${hours}:${minutes}AM (${hours}:${minutes})`;
+  } else if (hours == 12) {
+    return `12:${minutes}PM (${hours}:${minutes})`;
+  } else {
+    return `${hours - 12}:${minutes}PM (${hours}:${minutes})`;
+  }
 }
 </script>
 
 <template>
   <div class="center">
     <input type="date" min="2025-01-01" class="date" v-model="date" />
+    <span class="mobile-time">{{ parseTime(parseInt(mainTime)) }}</span>
   </div>
 
   <div class="wrapper">
@@ -121,8 +131,8 @@ function parseTime(time) {
       <div class="scale-line-flag" v-for="i in 49" :key="i">
         <div
           v-if="
-            (mainTime < 47 && mainTime == i - 3) ||
-            (mainTime >= 47 && mainTime - 48 == i - 3)
+            (mainTime < 46 && mainTime == i - 3) ||
+            (mainTime >= 46 && mainTime - 48 == i - 3)
           "
           class="scale-line-flag-time poland-flag"
         >
@@ -137,8 +147,8 @@ function parseTime(time) {
 
         <div
           v-if="
-            (mainTime < 45 && mainTime == i - 5) ||
-            (mainTime >= 45 && mainTime - 48 == i - 5)
+            (mainTime < 44 && mainTime == i - 5) ||
+            (mainTime >= 44 && mainTime - 48 == i - 5)
           "
           class="scale-line-flag-time ukraine-flag"
         >
@@ -207,14 +217,14 @@ function parseTime(time) {
 
   <div class="mobile-info">
     <div>
-      <span>🇨🇦 Canada:</span>
+      <span>🇨🇦 </span>
       {{
         parseTime(mainTime < 16 ? parseInt(mainTime) + 48 - 16 : mainTime - 16)
       }}
       - {{ canadianDate }}
     </div>
     <div>
-      <span>🇺🇦 Ukraine:</span>
+      <span>🇺🇦 </span>
       {{
         parseTime(
           mainTime > 44 ? parseInt(mainTime - 48) + 4 : parseInt(mainTime) + 4,
@@ -223,7 +233,7 @@ function parseTime(time) {
       - {{ ukrainianDate }}
     </div>
     <div>
-      <span>🇵🇱 Poland:</span>
+      <span>🇵🇱 </span>
       {{
         parseTime(
           mainTime > 46 ? parseInt(mainTime) - 48 + 2 : parseInt(mainTime) + 2,
@@ -407,12 +417,25 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
   }
 }
 
+.mobile-time {
+  display: none;
+}
+
+.mobile-info {
+  display: none;
+}
+
 @media (max-width: 1024px) {
+  * {
+    font-size: 18px;
+  }
+
   .dis {
     position: absolute;
     bottom: 100px;
     left: 50%;
     transform: translateX(-50%);
+    width: 150px;
   }
 
   .scale-line-time {
@@ -434,6 +457,19 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
 
   .scale-line-date-time {
     display: none;
+  }
+
+  .mobile-time {
+    display: block;
+    margin-right: 5px;
+  }
+
+  .mobile-info {
+    display: block;
+  }
+
+  .copied {
+    bottom: 130px;
   }
 }
 </style>
