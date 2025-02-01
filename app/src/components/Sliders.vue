@@ -123,7 +123,34 @@ function parseTime(time) {
 <template>
   <div class="center">
     <input type="date" min="2025-01-01" class="date" v-model="date" />
-    <span class="mobile-time">{{ parseTime(parseInt(mainTime)) }}</span>
+  </div>
+
+  <div class="mobile-info">
+    <div>
+      <span>🇨🇦 </span>
+      {{
+        parseTime(mainTime < 16 ? parseInt(mainTime) + 48 - 16 : mainTime - 16)
+      }}
+      - {{ canadianDate }}
+    </div>
+    <div>
+      <span>🇺🇦 </span>
+      {{
+        parseTime(
+          mainTime > 44 ? parseInt(mainTime - 48) + 4 : parseInt(mainTime) + 4,
+        )
+      }}
+      - {{ ukrainianDate }}
+    </div>
+    <div>
+      <span>🇵🇱 </span>
+      {{
+        parseTime(
+          mainTime > 46 ? parseInt(mainTime) - 48 + 2 : parseInt(mainTime) + 2,
+        )
+      }}
+      - {{ polandDate }}
+    </div>
   </div>
 
   <div class="wrapper">
@@ -161,7 +188,10 @@ function parseTime(time) {
           </div>
         </div>
 
-        <div v-if="parseInt(mainTime) === i - 1" class="scale-line-flag-time">
+        <div
+          v-if="parseInt(mainTime) === i - 1"
+          class="scale-line-flag-time main"
+        >
           <div class="scale-line-date-time">{{ date }}</div>
         </div>
 
@@ -215,32 +245,8 @@ function parseTime(time) {
     />
   </div>
 
-  <div class="mobile-info">
-    <div>
-      <span>🇨🇦 </span>
-      {{
-        parseTime(mainTime < 16 ? parseInt(mainTime) + 48 - 16 : mainTime - 16)
-      }}
-      - {{ canadianDate }}
-    </div>
-    <div>
-      <span>🇺🇦 </span>
-      {{
-        parseTime(
-          mainTime > 44 ? parseInt(mainTime - 48) + 4 : parseInt(mainTime) + 4,
-        )
-      }}
-      - {{ ukrainianDate }}
-    </div>
-    <div>
-      <span>🇵🇱 </span>
-      {{
-        parseTime(
-          mainTime > 46 ? parseInt(mainTime) - 48 + 2 : parseInt(mainTime) + 2,
-        )
-      }}
-      - {{ polandDate }}
-    </div>
+  <div class="center">
+    <span class="mobile-time">{{ parseTime(parseInt(mainTime)) }}</span>
   </div>
 
   <div class="center">
@@ -445,17 +451,32 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
     display: none;
   }
 
+  .scale-line:nth-child(4n + 1) .scale-line-time {
+    display: block;
+    font-size: 8px;
+    letter-spacing: -0.5px;
+  }
+
   .main-input.poland,
   .main-input.ukraine,
-  .main-input.canada,
-  .poland-flag,
-  .canada-flag,
-  .ukraine-flag {
+  .main-input.canada {
+    display: none;
+  }
+
+  .scale-line-flag-time.main {
     display: none;
   }
 
   .scale-line-flag-time {
     height: 30px;
+    top: -30px;
+
+    & > div:not(.scale-line-date-time) {
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 35px;
+      font-size: 10px;
+    }
   }
 
   .scale-line-date-time {
@@ -473,6 +494,10 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
 
   .copied {
     bottom: 130px;
+  }
+
+  .wrapper {
+    margin-top: 50px;
   }
 }
 
