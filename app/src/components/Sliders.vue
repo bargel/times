@@ -94,9 +94,10 @@ watch(mainTime, (val) => {
 });
 
 function copy() {
-  event.target.select();
-  document.execCommand("copy");
-  event.target.blur();
+  // event.target.select();
+  // document.execCommand("copy");
+  // event.target.blur();
+  navigator.clipboard.writeText(disFormatted.value);
   showCopied.value = true;
 
   setTimeout(() => {
@@ -250,10 +251,20 @@ function parseTime(time) {
   </div>
 
   <div class="center">
-    <input class="dis" type="text" v-model="disFormatted" @click="copy" />
-    <Transition name="bounce">
-      <div class="copied" v-show="showCopied">Copied!</div>
-    </Transition>
+    <div class="dis-wrapper">
+      <button type="button" @click="copy" class="dis-btn">📋</button>
+      <input
+        class="dis"
+        type="text"
+        readonly
+        v-model="disFormatted"
+        @click.prevent.stop="copy"
+      />
+
+      <Transition name="bounce">
+        <div class="copied" v-show="showCopied">Copied!</div>
+      </Transition>
+    </div>
   </div>
 </template>
 
@@ -394,10 +405,26 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
   transform: translateX(-50%);
 }
 
-.dis {
+.dis-wrapper {
   margin-top: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  position: relative;
+}
+
+.dis {
   width: 120px;
   text-align: center;
+  cursor: pointer;
+}
+
+.dis-btn {
+  display: block;
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 20px;
   cursor: pointer;
 }
 
@@ -406,6 +433,7 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
   left: 50%;
   transform: translateX(-50%);
   font-size: 14px;
+  bottom: 90px;
 }
 
 .bounce-enter-active {
@@ -439,12 +467,14 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
     font-size: 18px;
   }
 
+  .dis-wrapper {
+    position: relative;
+    margin-top: 70px;
+    text-align: center;
+  }
+
   .dis {
-    position: absolute;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 150px;
+    width: 170px;
   }
 
   .scale-line-time {
@@ -492,12 +522,25 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
     display: block;
   }
 
-  .copied {
-    bottom: 130px;
-  }
-
   .wrapper {
     margin-top: 50px;
+  }
+
+  @media (orientation: landscape) {
+    .dis-wrapper {
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      margin-top: 0;
+    }
+
+    .wrapper {
+      height: 50px;
+    }
+
+    * {
+      font-size: 16px;
+    }
   }
 }
 
