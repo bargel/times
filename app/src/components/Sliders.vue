@@ -6,6 +6,9 @@ const mainTime = ref(24);
 const needToShowCanadianDate = ref(null);
 const needToShowUkrainianDate = ref(null);
 const needToShowPolandDate = ref(null);
+const canadaOffset = 14;
+const ukrainOffset = 6;
+const polandOffset = 4;
 
 const date = ref(moment().format("YYYY-MM-DD"));
 const canadianDate = computed(() =>
@@ -33,7 +36,7 @@ const disFormatted = computed(() => {
 const showCopied = ref(false);
 
 const canadaTime = computed(() => {
-  let canadaTime = mainTime.value - 16;
+  let canadaTime = mainTime.value - canadaOffset;
 
   if (canadaTime < 0) {
     canadaTime = canadaTime + 48;
@@ -46,7 +49,7 @@ const canadaTime = computed(() => {
 });
 
 const polandTime = computed(() => {
-  let polandTime = parseInt(mainTime.value) + 2;
+  let polandTime = parseInt(mainTime.value) + polandOffset;
 
   if (polandTime >= 48) {
     polandTime = polandTime - 48;
@@ -59,7 +62,7 @@ const polandTime = computed(() => {
 });
 
 const ukraineTime = computed(() => {
-  let ukraineTime = parseInt(mainTime.value) + 4;
+  let ukraineTime = parseInt(mainTime.value) + ukrainOffset;
 
   if (ukraineTime >= 48) {
     ukraineTime = ukraineTime - 48;
@@ -130,7 +133,11 @@ function parseTime(time) {
     <div>
       <span>🇨🇦 </span>
       {{
-        parseTime(mainTime < 16 ? parseInt(mainTime) + 48 - 16 : mainTime - 16)
+        parseTime(
+          mainTime < canadaOffset
+            ? parseInt(mainTime) + 48 - canadaOffset
+            : mainTime - canadaOffset,
+        )
       }}
       - {{ canadianDate }}
     </div>
@@ -138,7 +145,9 @@ function parseTime(time) {
       <span>🇺🇦 </span>
       {{
         parseTime(
-          mainTime > 44 ? parseInt(mainTime - 48) + 4 : parseInt(mainTime) + 4,
+          mainTime > 44
+            ? parseInt(mainTime - 48) + ukrainOffset
+            : parseInt(mainTime) + ukrainOffset,
         )
       }}
       - {{ ukrainianDate }}
@@ -147,7 +156,9 @@ function parseTime(time) {
       <span>🇵🇱 </span>
       {{
         parseTime(
-          mainTime > 46 ? parseInt(mainTime) - 48 + 2 : parseInt(mainTime) + 2,
+          mainTime > 46
+            ? parseInt(mainTime) - 48 + polandOffset
+            : parseInt(mainTime) + polandOffset,
         )
       }}
       - {{ polandDate }}
@@ -159,8 +170,8 @@ function parseTime(time) {
       <div class="scale-line-flag" v-for="i in 49" :key="i">
         <div
           v-if="
-            (mainTime < 46 && mainTime == i - 3) ||
-            (mainTime >= 46 && mainTime - 48 == i - 3)
+            (mainTime < 46 && mainTime == i - (polandOffset + 1)) ||
+            (mainTime >= 46 && mainTime - 48 == i - (polandOffset + 1))
           "
           class="scale-line-flag-time poland-flag"
         >
@@ -175,8 +186,8 @@ function parseTime(time) {
 
         <div
           v-if="
-            (mainTime < 44 && mainTime == i - 5) ||
-            (mainTime >= 44 && mainTime - 48 == i - 5)
+            (mainTime < 44 && mainTime == i - (ukrainOffset + 1)) ||
+            (mainTime >= 44 && mainTime - 48 == i - (ukrainOffset + 1))
           "
           class="scale-line-flag-time ukraine-flag"
         >
@@ -198,8 +209,9 @@ function parseTime(time) {
 
         <div
           v-if="
-            (mainTime < 16 && parseInt(mainTime) + 48 == i + 15) ||
-            (mainTime >= 16 && mainTime == i + 15)
+            (mainTime < canadaOffset &&
+              parseInt(mainTime) + 48 == i + (canadaOffset - 1)) ||
+            (mainTime >= canadaOffset && mainTime == i + (canadaOffset - 1))
           "
           class="scale-line-flag-time canada-flag"
         >
@@ -228,21 +240,21 @@ function parseTime(time) {
       class="main-input canada"
       max="48"
       :value="canadaTime"
-      @input="mainTime = parseInt($event.target.value) + 16"
+      @input="mainTime = parseInt($event.target.value) + canadaOffset"
     />
     <input
       type="range"
       class="main-input poland"
       max="48"
       :value="polandTime"
-      @input="mainTime = parseInt($event.target.value) - 2"
+      @input="mainTime = parseInt($event.target.value) - polandOffset"
     />
     <input
       type="range"
       class="main-input ukraine"
       max="48"
       :value="ukraineTime"
-      @input="mainTime = parseInt($event.target.value) - 4"
+      @input="mainTime = parseInt($event.target.value) - ukrainOffset"
     />
   </div>
 
