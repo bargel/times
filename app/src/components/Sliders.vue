@@ -6,9 +6,9 @@ const mainTime = ref(24);
 const needToShowCanadianDate = ref(null);
 const needToShowUkrainianDate = ref(null);
 const needToShowPolandDate = ref(null);
-const canadaOffset = 14;
-const ukrainOffset = 6;
-const polandOffset = 4;
+const canadaOffset = 16;
+const ukrainOffset = 4;
+const polandOffset = 2;
 
 const date = ref(moment().format("YYYY-MM-DD"));
 const canadianDate = computed(() =>
