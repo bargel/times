@@ -2,15 +2,34 @@
 import { ref, computed, watch } from "vue";
 import moment from "moment";
 
-const mainTime = ref(24);
+// Initialize to current UTC time in slider units (each unit = 30 min)
+const now = new Date();
+const mainTime = ref(now.getUTCHours() * 2 + (now.getUTCMinutes() >= 30 ? 1 : 0));
 const needToShowCanadianDate = ref(null);
 const needToShowUkrainianDate = ref(null);
 const needToShowPolandDate = ref(null);
-const canadaOffset = 16;
-const ukrainOffset = 4;
-const polandOffset = 2;
 
 const date = ref(moment().format("YYYY-MM-DD"));
+
+
+// Get timezone offset in minutes for a specific date and timezone
+function getTimezoneOffset(dateStr, timezone) {
+  const dateObj = new Date(dateStr + "T12:00:00"); // noon to avoid edge cases
+  const utcDate = new Date(dateObj.toLocaleString("en-US", { timeZone: "UTC" }));
+  const tzDate = new Date(dateObj.toLocaleString("en-US", { timeZone: timezone }));
+  return (tzDate - utcDate) / 60000; // difference in minutes
+}
+
+// Calculate UTC offset for a timezone in 30-min slider units
+function getUtcOffset(dateStr, timezone) {
+  const offsetMinutes = getTimezoneOffset(dateStr, timezone);
+  return Math.round(offsetMinutes / 30);
+}
+
+// Dynamic offsets based on selected date (relative to UTC)
+const canadaOffset = computed(() => -getUtcOffset(date.value, "America/Vancouver"));
+const ukrainOffset = computed(() => getUtcOffset(date.value, "Europe/Kyiv"));
+const polandOffset = computed(() => getUtcOffset(date.value, "Europe/Warsaw"));
 const canadianDate = computed(() =>
   moment(date.value)
     .add(needToShowCanadianDate.value, "days")
@@ -28,15 +47,14 @@ const ukrainianDate = computed(() =>
 );
 
 const disFormatted = computed(() => {
-  return `<t:${moment(date.value)
+  return `<t:${moment.utc(date.value)
     .add(mainTime.value * 30, "minutes")
-    .add(new Date().getTimezoneOffset() * -1, "minutes")
     .unix()}:f>`;
 });
 const showCopied = ref(false);
 
 const canadaTime = computed(() => {
-  let canadaTime = mainTime.value - canadaOffset;
+  let canadaTime = mainTime.value - canadaOffset.value;
 
   if (canadaTime < 0) {
     canadaTime = canadaTime + 48;
@@ -49,7 +67,7 @@ const canadaTime = computed(() => {
 });
 
 const polandTime = computed(() => {
-  let polandTime = parseInt(mainTime.value) + polandOffset;
+  let polandTime = parseInt(mainTime.value) + polandOffset.value;
 
   if (polandTime >= 48) {
     polandTime = polandTime - 48;
@@ -62,7 +80,7 @@ const polandTime = computed(() => {
 });
 
 const ukraineTime = computed(() => {
-  let ukraineTime = parseInt(mainTime.value) + ukrainOffset;
+  let ukraineTime = parseInt(mainTime.value) + ukrainOffset.value;
 
   if (ukraineTime >= 48) {
     ukraineTime = ukraineTime - 48;
@@ -145,7 +163,7 @@ function parseTime(time) {
       <span>🇺🇦 </span>
       {{
         parseTime(
-          mainTime > 44
+          mainTime > 48 - ukrainOffset
             ? parseInt(mainTime - 48) + ukrainOffset
             : parseInt(mainTime) + ukrainOffset,
         )
@@ -156,7 +174,7 @@ function parseTime(time) {
       <span>🇵🇱 </span>
       {{
         parseTime(
-          mainTime > 46
+          mainTime > 48 - polandOffset
             ? parseInt(mainTime) - 48 + polandOffset
             : parseInt(mainTime) + polandOffset,
         )
@@ -170,8 +188,8 @@ function parseTime(time) {
       <div class="scale-line-flag" v-for="i in 49" :key="i">
         <div
           v-if="
-            (mainTime < 46 && mainTime == i - (polandOffset + 1)) ||
-            (mainTime >= 46 && mainTime - 48 == i - (polandOffset + 1))
+            (mainTime < 48 - polandOffset && mainTime == i - (polandOffset + 1)) ||
+            (mainTime >= 48 - polandOffset && mainTime - 48 == i - (polandOffset + 1))
           "
           class="scale-line-flag-time poland-flag"
         >
@@ -186,8 +204,8 @@ function parseTime(time) {
 
         <div
           v-if="
-            (mainTime < 44 && mainTime == i - (ukrainOffset + 1)) ||
-            (mainTime >= 44 && mainTime - 48 == i - (ukrainOffset + 1))
+            (mainTime < 48 - ukrainOffset && mainTime == i - (ukrainOffset + 1)) ||
+            (mainTime >= 48 - ukrainOffset && mainTime - 48 == i - (ukrainOffset + 1))
           "
           class="scale-line-flag-time ukraine-flag"
         >
