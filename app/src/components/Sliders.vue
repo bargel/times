@@ -51,6 +51,15 @@ const disFormatted = computed(() => {
     .add(mainTime.value * 30, "minutes")
     .unix()}:f>`;
 });
+
+const plainFormatted = computed(() =>
+  [
+    `🇨🇦 ${parseTime(canadaTime.value)} - ${canadianDate.value}`,
+    `🇺🇦 ${parseTime(ukraineTime.value)} - ${ukrainianDate.value}`,
+    `🇵🇱 ${parseTime(polandTime.value)} - ${polandDate.value}`,
+  ].join("\n"),
+);
+
 const showCopied = ref(false);
 
 const canadaTime = computed(() => {
@@ -114,11 +123,11 @@ watch(mainTime, (val) => {
   }
 });
 
-function copy() {
+function copy(text) {
   // event.target.select();
   // document.execCommand("copy");
   // event.target.blur();
-  navigator.clipboard.writeText(disFormatted.value);
+  navigator.clipboard.writeText(text);
   showCopied.value = true;
 
   setTimeout(() => {
@@ -282,13 +291,30 @@ function parseTime(time) {
 
   <div class="center">
     <div class="dis-wrapper">
-      <button type="button" @click="copy" class="dis-btn">📋</button>
+      <div class="dis-btns">
+        <button
+          type="button"
+          @click="copy(disFormatted)"
+          class="dis-btn"
+          title="Copy Discord timestamp"
+        >
+          📋
+        </button>
+        <button
+          type="button"
+          @click="copy(plainFormatted)"
+          class="dis-btn"
+          title="Copy plain text"
+        >
+          💬
+        </button>
+      </div>
       <input
         class="dis"
         type="text"
         readonly
         v-model="disFormatted"
-        @click.prevent.stop="copy"
+        @click.prevent.stop="copy(disFormatted)"
       />
 
       <Transition name="bounce">
@@ -450,9 +476,14 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
   cursor: pointer;
 }
 
+.dis-btns {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
 .dis-btn {
   display: block;
-  margin-bottom: 10px;
   padding: 10px;
   font-size: 20px;
   cursor: pointer;
