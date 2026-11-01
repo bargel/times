@@ -1,9 +1,7 @@
 .vscode
+
+# AI tooling: local only
+.impeccable/
 .playwright-mcp/
-.impeccable/review/
-.impeccable/mocks/
-.impeccable/build/
-.impeccable/config.local.json
-.impeccable/questions/
-.impeccable/critique/
-.impeccable/hook.cache.json
+PRODUCT.md
+DESIGN.md
