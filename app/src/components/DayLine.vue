@@ -41,13 +41,6 @@ const touchedHours = computed(
   () => new Set([...touchedSteps.value].filter((step) => step % 2 === 0).map((step) => step / 2)),
 )
 
-/** On a phone an odd hour shows only when touched, and then needs its even neighbours out of the way. */
-function isCrowdedOut(hour: number) {
-  const touched = touchedHours.value
-  if (hour % 2 === 1 || touched.has(hour)) return false
-  return touched.has(hour - 1) || touched.has(hour + 1)
-}
-
 const line = useTemplateRef('line')
 const lineHeld = ref(false)
 const poleHeld = ref(false)
@@ -93,14 +86,7 @@ function onLineRelease() {
           v-for="hour in HOURS"
           :key="hour"
           class="hour"
-          :class="{
-            odd: hour % 2 === 1,
-            sparse: hour % 4 !== 0 || touchedHours.has(hour - 2) || touchedHours.has(hour + 2),
-            touched: touchedHours.has(hour),
-            'crowded-out': isCrowdedOut(hour),
-            'pair-left': touchedHours.has(hour) && touchedHours.has(hour + 1),
-            'pair-right': touchedHours.has(hour) && touchedHours.has(hour - 1),
-          }"
+          :class="{ sixth: hour % 6 === 0, touched: touchedHours.has(hour) }"
           :style="{ left: `${(hour / 24) * 100}%` }"
         >
           {{ String(hour).padStart(2, '0') }}
@@ -203,49 +189,56 @@ function onLineRelease() {
   height: 100px;
 }
 
-/* Too narrow for 25 numbers: keep the even hours and whichever ones a flag is touching. */
+/*
+ * Too narrow for 25 numbers: a ruler that never changes as the flags move. A tick for every hour, a
+ * number and a longer tick every six. The big times above say the exact time, so this only places it.
+ */
 @media (max-width: 759px) {
-  .odd:not(.touched),
-  .crowded-out {
-    display: none;
-  }
-
-  /* Warsaw and Kyiv often touch neighbouring numbers: part them, each to its own side of its pole. */
-  .pair-left {
-    transform: translateX(calc(-100% + 3px));
-  }
-
-  .pair-right {
-    transform: translateX(-3px);
-  }
-
-  /* Numbers fill the row here, so the dots drop to a row of their own just under them. */
   .hours {
     height: 25px;
   }
 
   .half-hour {
-    top: 20px;
+    display: none;
   }
 
-  .half-hour.touched {
-    top: 19px;
+  .hour {
+    font-weight: 500;
+    color: var(--ink-soft);
   }
 
-  .half-hour.touched::after {
-    content: none;
+  .hour:not(.sixth) {
+    width: 0;
+    font-size: 0;
   }
 
-  /* Poles rise through the row of dots, so one on the hour still touches its number. */
+  .hour.sixth.touched {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .hour::after {
+    content: '';
+    position: absolute;
+    top: 17px;
+    left: 50%;
+    width: 1px;
+    height: 5px;
+    margin-left: -0.5px;
+    background: color-mix(in srgb, var(--ink-soft) 65%, transparent);
+  }
+
+  .hour.sixth::after {
+    top: 15px;
+    width: 1.5px;
+    height: 7px;
+    margin-left: -0.75px;
+    background: var(--ink-soft);
+  }
+
+  /* The poles start at the ticks. */
   .poles {
     margin-top: -5px;
-  }
-}
-
-/* The smallest phones: every fourth hour, plus the touched ones. */
-@media (max-width: 379px) {
-  .sparse:not(.touched) {
-    display: none;
   }
 }
 

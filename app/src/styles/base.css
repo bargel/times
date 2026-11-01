@@ -5,11 +5,18 @@
   margin: 0;
 }
 
-/* No zoom on a double tap: a quick second tap on a control must stay a tap. Pinching still zooms. */
+/*
+ * The page doesn't zoom: panning only, so neither a pinch nor a double tap. On every element, not just
+ * the root: a browser can stop looking up the tree at `#app`, which scrolls. :where keeps this weaker
+ * than any control's own value.
+ */
+:where(*) {
+  touch-action: pan-x pan-y;
+}
+
 html {
   height: 100%;
   overscroll-behavior: none;
-  touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
