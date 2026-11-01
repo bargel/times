@@ -1,16 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { ZONES } from '@/config/zones'
+import { homeFirst, type Zone } from '@/config/zones'
 import { shortDate, t } from '@/lib/i18n'
 import { clock12, clockDisplay, wallClockAt, type IsoDate } from '@/lib/time'
 
 import ZoneFlag from './ZoneFlag.vue'
+import ZoneTime from './ZoneTime.vue'
 
-const props = defineProps<{ instant: number; selectedDate: IsoDate }>()
+const props = defineProps<{ instant: number; selectedDate: IsoDate; homeZone: Zone | undefined }>()
+
+const emit = defineEmits<{
+  setTime: [timeZone: string, minute: number]
+  beginEdit: []
+  cancelEdit: []
+}>()
 
 const readings = computed(() =>
-  ZONES.map((zone) => {
+  homeFirst(props.homeZone).map((zone) => {
     const wall = wallClockAt(props.instant, zone.timeZone)
     return {
       zone,
@@ -30,7 +37,13 @@ const readings = computed(() =>
         <ZoneFlag class="place-flag" :zone="reading.zone.id" />
         {{ t.cities[reading.zone.id] }}
       </dt>
-      <dd class="time">{{ reading.time }}</dd>
+      <ZoneTime
+        :time="reading.time"
+        :label="t.timeIn(t.cities[reading.zone.id])"
+        @set="emit('setTime', reading.zone.timeZone, $event)"
+        @begin="emit('beginEdit')"
+        @cancel="emit('cancelEdit')"
+      />
       <dd class="detail">{{ reading.time12 }}</dd>
       <dd class="detail" :class="{ 'other-day': reading.otherDay }">{{ reading.date }}</dd>
     </div>

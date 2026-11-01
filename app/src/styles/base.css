@@ -30,6 +30,7 @@ body {
 
 #app {
   height: 100dvh;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: none;
 }

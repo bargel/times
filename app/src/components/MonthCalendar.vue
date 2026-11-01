@@ -11,6 +11,7 @@ import ChevronButton from './ChevronButton.vue'
 import NowButton from './NowButton.vue'
 
 const DAYS_IN_WEEK = 7
+const PAGE_GAP_PX = 12
 
 const props = defineProps<{ date: IsoDate; today: IsoDate; isLive: boolean }>()
 
@@ -25,15 +26,31 @@ watch(
 )
 
 const days = computed(() => monthGrid(shownMonth.value))
-const weeks = computed(() =>
-  Array.from({ length: days.value.length / DAYS_IN_WEEK }, (_, week) =>
-    days.value.slice(week * DAYS_IN_WEEK, (week + 1) * DAYS_IN_WEEK),
-  ),
-)
 const atFirstMonth = computed(() => shownMonth.value <= monthOf(FIRST_SELECTABLE_DATE))
 
+function weeksOf(month: string) {
+  const grid = monthGrid(month)
+  return Array.from({ length: grid.length / DAYS_IN_WEEK }, (_, week) =>
+    grid.slice(week * DAYS_IN_WEEK, (week + 1) * DAYS_IN_WEEK),
+  )
+}
+
+// The neighbours are always there beside the current page, ready for a finger to drag them in.
+const pages = computed(() => {
+  const month = shownMonth.value
+  const months = [
+    ...(atFirstMonth.value ? [] : [{ month: shiftMonth(month, -1), place: 'before' }]),
+    { month, place: 'current' },
+    { month: shiftMonth(month, 1), place: 'after' },
+  ]
+  return months.map((page) => ({ ...page, weeks: weeksOf(page.month) }))
+})
+
+const strip = useTemplateRef('strip')
+
 const swipe = usePageSwipe(
-  useTemplateRef('sheet'),
+  strip,
+  PAGE_GAP_PX,
   (step) => step >= 0 || !atFirstMonth.value,
   (step) => {
     shownMonth.value = shiftMonth(shownMonth.value, step)
@@ -42,7 +59,13 @@ const swipe = usePageSwipe(
 
 function followNow() {
   shownMonth.value = monthOf(props.today)
+  focusedDate.value = null
   emit('followNow')
+}
+
+function pickDay(day: IsoDate) {
+  focusedDate.value = null
+  emit('select', day)
 }
 
 // The whole page is one Tab stop; arrow keys move around it.
@@ -51,8 +74,6 @@ const tabStop = computed(() => {
   if (focusedDate.value && days.value.includes(focusedDate.value)) return focusedDate.value
   return days.value.includes(props.date) ? props.date : `${shownMonth.value}-01`
 })
-
-const grid = useTemplateRef('grid')
 
 function moveFocus(event: KeyboardEvent, from: IsoDate) {
   const weekday = days.value.indexOf(from) % DAYS_IN_WEEK
@@ -73,7 +94,10 @@ function moveFocus(event: KeyboardEvent, from: IsoDate) {
 
   focusedDate.value = target
   if (!days.value.includes(target)) shownMonth.value = monthOf(target)
-  nextTick(() => grid.value?.querySelector<HTMLElement>(`[data-date="${target}"]`)?.focus())
+  // Days at a month's edge are on a neighbouring page too.
+  nextTick(() =>
+    strip.value?.querySelector<HTMLElement>(`.current [data-date="${target}"]`)?.focus(),
+  )
 }
 </script>
 
@@ -95,49 +119,66 @@ function moveFocus(event: KeyboardEvent, from: IsoDate) {
       <NowButton class="now-button" :is-live="isLive" @click="followNow" />
     </div>
 
+    <!-- Apart from the days, so the weekday names stay put while a month slides under them. -->
+    <table class="grid weekdays">
+      <thead>
+        <tr>
+          <th v-for="weekday in t.weekdays" :key="weekday" class="weekday" scope="col">
+            {{ weekday }}
+          </th>
+        </tr>
+      </thead>
+    </table>
+
     <div
       class="swipe-area"
-      :class="{ swiping: swipe.swiping.value }"
       @pointerdown="swipe.onPointerDown"
       @pointermove="swipe.onPointerMove"
       @pointerup="swipe.onPointerUp"
       @pointercancel="swipe.onPointerCancel"
       @click.capture="swipe.onClickCapture"
     >
-      <table ref="grid" class="grid" role="grid">
-        <thead>
-          <tr>
-            <th v-for="weekday in t.weekdays" :key="weekday" class="weekday" scope="col">
-              {{ weekday }}
-            </th>
-          </tr>
-        </thead>
-        <tbody ref="sheet">
-          <tr v-for="week in weeks" :key="week[0]">
-            <td v-for="day in week" :key="day">
-              <button
-                type="button"
-                class="day"
-                :class="{
-                  selected: day === date,
-                  today: day === today,
-                  'other-month': monthOf(day) !== shownMonth,
-                }"
-                :data-date="day"
-                :tabindex="day === tabStop ? 0 : -1"
-                :disabled="day < FIRST_SELECTABLE_DATE"
-                :aria-label="`${shortDate(day)} ${day.slice(0, 4)}`"
-                :aria-pressed="day === date"
-                :aria-current="day === today ? 'date' : undefined"
-                @click="emit('select', day)"
-                @keydown="moveFocus($event, day)"
-              >
-                {{ Number(day.slice(8)) }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div
+        ref="strip"
+        class="strip"
+        :class="{ moving: swipe.moving.value }"
+        :style="{ '--page-gap': `${PAGE_GAP_PX}px` }"
+      >
+        <table
+          v-for="page in pages"
+          :key="page.month"
+          class="grid"
+          :class="page.place"
+          role="grid"
+          :inert="page.place !== 'current'"
+        >
+          <tbody>
+            <tr v-for="week in page.weeks" :key="week[0]">
+              <td v-for="day in week" :key="day">
+                <button
+                  type="button"
+                  class="day"
+                  :class="{
+                    selected: day === date,
+                    today: day === today,
+                    'other-month': monthOf(day) !== page.month,
+                  }"
+                  :data-date="day"
+                  :tabindex="day === tabStop ? 0 : -1"
+                  :disabled="day < FIRST_SELECTABLE_DATE"
+                  :aria-label="`${shortDate(day)} ${day.slice(0, 4)}`"
+                  :aria-pressed="day === date"
+                  :aria-current="day === today ? 'date' : undefined"
+                  @click="pickDay(day)"
+                  @keydown="moveFocus($event, day)"
+                >
+                  {{ Number(day.slice(8)) }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 </template>
@@ -171,9 +212,12 @@ function moveFocus(event: KeyboardEvent, from: IsoDate) {
 
 .grid {
   width: 100%;
-  margin-top: 4px;
   border-collapse: collapse;
   table-layout: fixed;
+}
+
+.weekdays {
+  margin-top: 4px;
 }
 
 .weekday {
@@ -197,15 +241,34 @@ td {
  * a quick next swipe can land while the days are still sliding away from under the finger.
  */
 .swipe-area {
+  /* Hides the neighbours. The padding is room for a focus ring around a day at the edge. */
+  margin: -6px;
+  padding: 6px;
+  /* Clip, where there is one: `hidden` still leaves a box something could scroll sideways. */
+  overflow: hidden;
+  overflow: clip;
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* Holds only while the page is off its place, so it never clips a focus ring. */
+.strip {
+  position: relative;
+}
 
-.swiping {
-  overflow: hidden;
+/* Further out than the padding above, so nothing of them shows at rest. */
+.before,
+.after {
+  position: absolute;
+  top: 0;
+}
+
+.before {
+  right: calc(100% + var(--page-gap));
+}
+
+.after {
+  left: calc(100% + var(--page-gap));
 }
 
 .day {
@@ -228,6 +291,12 @@ td {
  */
 :where(td:nth-child(n + 6)) .day {
   color: color-mix(in srgb, var(--sunset) 70%, var(--ink-soft));
+  transition: color 120ms var(--ease-out);
+}
+
+/* On the move these numbers pass under other days' names, where their colour would mislead. */
+.moving :where(td:nth-child(n + 6)) .day {
+  color: var(--ink);
 }
 
 .day.other-month {

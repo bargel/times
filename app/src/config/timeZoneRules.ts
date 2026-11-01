@@ -24,10 +24,16 @@ const RULE_CHANGES: readonly RuleChange[] = [
   },
 ]
 
-/** The zone whose clock is right for this place at this instant. */
-export function zoneInEffect(timeZone: string, instant: number): string {
-  const change = RULE_CHANGES.find(
-    ({ timeZones, from }) => timeZones.includes(timeZone) && instant >= from,
-  )
-  return change?.use ?? timeZone
+/** The zone whose clock is right for this place at this instant: the latest rule already started. */
+export function zoneInEffect(
+  timeZone: string,
+  instant: number,
+  changes: readonly RuleChange[] = RULE_CHANGES,
+): string {
+  let latest: RuleChange | undefined
+  for (const change of changes) {
+    const applies = change.timeZones.includes(timeZone) && instant >= change.from
+    if (applies && (!latest || change.from > latest.from)) latest = change
+  }
+  return latest?.use ?? timeZone
 }

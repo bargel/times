@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useClipboard } from '@/composables/useClipboard'
 import { ZONES } from '@/config/zones'
 import { t } from '@/lib/i18n'
 import { discordTimestamp, plainText } from '@/lib/share'
 
-const props = defineProps<{ instant: number }>()
+const props = defineProps<{ instant: number; isLive: boolean }>()
 
 type Target = 'discord' | 'plain'
 
@@ -22,18 +22,28 @@ function label(button: Target, idle: string) {
   return status.value === 'copied' ? t.copied : t.copyFailed
 }
 
-const copyByHand = computed(() =>
-  status.value === 'failed' && target.value ? texts.value[target.value] : null,
-)
+const attempted = ref('')
+
+function attempt(button: Target) {
+  attempted.value = texts.value[button]
+  copy(attempted.value, button)
+}
+
+// The clock's ticking must not change text someone is selecting; picking another time should.
+watch([() => props.isLive, () => props.instant], ([isLive], [wasLive]) => {
+  if (target.value && (!isLive || isLive !== wasLive)) attempted.value = texts.value[target.value]
+})
+
+const copyByHand = computed(() => (status.value === 'failed' ? attempted.value : null))
 </script>
 
 <template>
   <div class="share">
     <div class="buttons">
-      <button type="button" class="button primary" @click="copy(texts.discord, 'discord')">
+      <button type="button" class="button primary" @click="attempt('discord')">
         {{ label('discord', t.copyForDiscord) }}
       </button>
-      <button type="button" class="button" @click="copy(texts.plain, 'plain')">
+      <button type="button" class="button" @click="attempt('plain')">
         {{ label('plain', t.copyPlainText) }}
       </button>
     </div>

@@ -9,8 +9,18 @@ import { findZone, ZONES } from '@/config/zones'
 import { browserTimeZone } from '@/lib/time'
 
 const homeTimeZone = browserTimeZone()
-const { isLive, today, date, instant, atDayEnd, selectDate, moveZoneClock, followNow } =
-  useTimeSelection(homeTimeZone)
+const {
+  isLive,
+  today,
+  date,
+  instant,
+  atDayEnd,
+  selectDate,
+  moveZoneClock,
+  followNow,
+  beginEdit,
+  cancelEdit,
+} = useTimeSelection(homeTimeZone)
 
 const homeZone = findZone(homeTimeZone)
 const primaryZone = homeZone ?? ZONES[0]!
@@ -40,7 +50,15 @@ const primaryZone = homeZone ?? ZONES[0]!
           @select="selectDate"
           @follow-now="followNow"
         />
-        <TimeReadout class="readings" :instant="instant" :selected-date="date" />
+        <TimeReadout
+          class="readings"
+          :instant="instant"
+          :selected-date="date"
+          :home-zone="homeZone"
+          @set-time="moveZoneClock"
+          @begin-edit="beginEdit"
+          @cancel-edit="cancelEdit"
+        />
       </div>
       <DayLine
         class="day-line"
@@ -50,7 +68,7 @@ const primaryZone = homeZone ?? ZONES[0]!
         :primary-zone="primaryZone"
         @move="moveZoneClock"
       />
-      <ShareActions :instant="instant" />
+      <ShareActions :instant="instant" :is-live="isLive" />
     </div>
   </main>
 </template>

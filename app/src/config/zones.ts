@@ -41,6 +41,11 @@ export const ZONES: readonly Zone[] = [
   },
 ]
 
+/** The zones with the reader's own first, for the page. The copied text keeps the fixed order. */
+export function homeFirst(home: Zone | undefined): readonly Zone[] {
+  return home ? [home, ...ZONES.filter((zone) => zone !== home)] : ZONES
+}
+
 export function findZone(timeZone: string): Zone | undefined {
   return ZONES.find((zone) => zone.timeZone === timeZone || zone.aliases?.includes(timeZone))
 }

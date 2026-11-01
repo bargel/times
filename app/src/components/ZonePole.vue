@@ -45,10 +45,12 @@ function onSliderInput(event: Event) {
 // Another zone's clock has no ends within the day, so its slider carries on around them.
 function onSliderKey(event: KeyboardEvent) {
   if (props.lastStep === STEPS_ON_LINE) return
-  if (event.key === 'ArrowLeft' && step.value === 0) {
+  const isBack = event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+  const isForward = event.key === 'ArrowRight' || event.key === 'ArrowUp'
+  if (isBack && step.value === 0) {
     event.preventDefault()
     emit('setMinute', props.lastStep * SLOT_MINUTES)
-  } else if (event.key === 'ArrowRight' && step.value === props.lastStep) {
+  } else if (isForward && step.value === props.lastStep) {
     event.preventDefault()
     emit('setMinute', 0)
   }

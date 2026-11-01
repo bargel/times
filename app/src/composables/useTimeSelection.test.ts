@@ -104,6 +104,72 @@ describe('useTimeSelection', () => {
     stop()
   })
 
+  it('sets a minute between the half hours, in any zone', () => {
+    const { instant, moveZoneClock, selectDate, stop } = selection('Europe/Kyiv')
+    selectDate('2026-12-15')
+    moveZoneClock('America/Vancouver', 18 * 60 + 10)
+    expect(wallClockAt(instant.value, 'America/Vancouver')).toMatchObject({ hours: 18, minutes: 10 })
+    stop()
+  })
+
+  it('keeps the minutes of a half hour that ends the home day', () => {
+    // Midnight to midnight in Vancouver runs 09:00 to 09:00 in Kyiv, and the clock is near the end.
+    const { instant, moveZoneClock, stop } = selection('America/Vancouver')
+    moveZoneClock('Europe/Kyiv', 9 * 60 + 30)
+    expect(wallClockAt(instant.value, 'Europe/Kyiv')).toMatchObject({ hours: 9, minutes: 30 })
+    stop()
+  })
+
+  it('cancelling an edit goes back to following the clock', () => {
+    const { beginEdit, cancelEdit, isLive, moveZoneClock, stop } = selection('Europe/Kyiv')
+    beginEdit()
+    moveZoneClock('Europe/Kyiv', 9 * 60)
+    moveZoneClock('Europe/Kyiv', 9 * 60 + 30)
+    cancelEdit()
+    expect(isLive.value).toBe(true)
+    stop()
+  })
+
+  it('cancelling an edit goes back to the time picked before it', () => {
+    const { beginEdit, cancelEdit, instant, moveZoneClock, selectDate, stop } =
+      selection('Europe/Kyiv')
+    selectDate('2026-12-15')
+    moveZoneClock('Europe/Kyiv', 18 * 60)
+    beginEdit()
+    moveZoneClock('Europe/Kyiv', 7 * 60 + 25)
+    cancelEdit()
+    expect(wallClockAt(instant.value, 'Europe/Kyiv')).toEqual({
+      date: '2026-12-15',
+      hours: 18,
+      minutes: 0,
+    })
+    stop()
+  })
+
+  it('keeps a picked minute when the date changes', () => {
+    const { date, instant, moveZoneClock, selectDate, stop } = selection('Europe/Kyiv')
+    selectDate('2026-12-15')
+    moveZoneClock('Europe/Kyiv', 18 * 60 + 45)
+    selectDate('2026-12-16')
+    expect(date.value).toBe('2026-12-16')
+    expect(wallClockAt(instant.value, 'Europe/Kyiv')).toEqual({
+      date: '2026-12-16',
+      hours: 18,
+      minutes: 45,
+    })
+    stop()
+  })
+
+  it('ignores a date before the first selectable one', () => {
+    const { date, isLive, selectDate, stop } = selection('UTC')
+    selectDate('2024-12-31')
+    expect(isLive.value).toBe(true)
+    expect(date.value).toBe('2026-10-31')
+    selectDate('2025-01-01')
+    expect(date.value).toBe('2025-01-01')
+    stop()
+  })
+
   it('ignores a cleared or invalid date', () => {
     const { date, isLive, selectDate, stop } = selection('UTC')
     selectDate('')

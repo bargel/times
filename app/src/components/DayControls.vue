@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick } from 'vue'
 
+import { useHiddenField } from '@/composables/useHiddenField'
 import { FIRST_SELECTABLE_DATE } from '@/config/dates'
 import { shortDate, t } from '@/lib/i18n'
 import { nextDate, previousDate, type IsoDate } from '@/lib/time'
@@ -18,22 +19,16 @@ const label = computed(() => {
   return isThisYear ? shortDate(props.date) : `${shortDate(props.date)} ${year}`
 })
 
-// A press anywhere on the label opens the system's calendar, not just on a browser's small icon.
-function openCalendar(event: Event) {
-  try {
-    ;(event.target as HTMLInputElement).showPicker()
-  } catch {
-    // Not supported or not allowed here: the field still opens or edits the way the browser does it.
-  }
-}
+const field = useHiddenField()
+const { typing } = field
 
-// Reached by keyboard, the field swaps in for the label, so what is being typed can be seen.
-const typing = ref(false)
-let pressed = false
-
-function onFieldFocus() {
-  typing.value = !pressed
-  pressed = false
+function onDateChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  emit('select', input.value)
+  // A date the page refused must not stay in the field as if it had been taken.
+  nextTick(() => {
+    input.value = props.date
+  })
 }
 </script>
 
@@ -55,11 +50,11 @@ function onFieldFocus() {
           :aria-label="t.date"
           :min="FIRST_SELECTABLE_DATE"
           :value="date"
-          @pointerdown="pressed = true"
-          @focus="onFieldFocus"
-          @blur="typing = false"
-          @click="openCalendar"
-          @change="emit('select', ($event.target as HTMLInputElement).value)"
+          @pointerdown="field.onPointerDown"
+          @focus="field.onFocus"
+          @blur="field.onBlur"
+          @click="field.onClick"
+          @change="onDateChange"
         />
       </label>
 

@@ -28,7 +28,9 @@ const poles = computed(() =>
     const atEnd = props.atDayEnd && zone === props.homeZone
     // The line works in half hours: while following the clock, a pole stands on the nearest one.
     const nearestStep = Math.round(minute / SLOT_MINUTES) * SLOT_MINUTES
-    return { zone, position: atEnd ? 1 : nearestStep / DAY_MINUTES }
+    // Only the home zone's day ends at 24:00; for the others that step is 00:00 at the start.
+    const stepOnLine = zone === props.homeZone ? nearestStep : nearestStep % DAY_MINUTES
+    return { zone, position: atEnd ? 1 : stepOnLine / DAY_MINUTES }
   }),
 )
 /** Half-hour steps along the line that a pole stands on: even ones are numbers, odd ones are dots. */
@@ -202,7 +204,7 @@ function onLineRelease() {
 }
 
 /* Too narrow for 25 numbers: keep the even hours and whichever ones a flag is touching. */
-@media (max-width: 479px) {
+@media (max-width: 759px) {
   .odd:not(.touched),
   .crowded-out {
     display: none;
