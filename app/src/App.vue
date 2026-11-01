@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DayControls from '@/components/DayControls.vue'
 import DayLine from '@/components/DayLine.vue'
+import MonthCalendar from '@/components/MonthCalendar.vue'
 import ShareActions from '@/components/ShareActions.vue'
 import TimeReadout from '@/components/TimeReadout.vue'
 import { useTimeSelection } from '@/composables/useTimeSelection'
@@ -8,7 +9,7 @@ import { findZone, ZONES } from '@/config/zones'
 import { browserTimeZone } from '@/lib/time'
 
 const homeTimeZone = browserTimeZone()
-const { isLive, date, instant, atDayEnd, selectDate, moveZoneClock, followNow } =
+const { isLive, today, date, instant, atDayEnd, selectDate, moveZoneClock, followNow } =
   useTimeSelection(homeTimeZone)
 
 const homeZone = findZone(homeTimeZone)
@@ -23,14 +24,24 @@ const primaryZone = homeZone ?? ZONES[0]!
     </h1>
 
     <div class="work">
-      <DayControls
-        class="day-controls"
-        :date="date"
-        :is-live="isLive"
-        @select="selectDate"
-        @follow-now="followNow"
-      />
-      <TimeReadout :instant="instant" :selected-date="date" />
+      <div class="top">
+        <MonthCalendar
+          class="calendar"
+          :date="date"
+          :today="today"
+          :is-live="isLive"
+          @select="selectDate"
+          @follow-now="followNow"
+        />
+        <DayControls
+          class="day-controls"
+          :date="date"
+          :is-live="isLive"
+          @select="selectDate"
+          @follow-now="followNow"
+        />
+        <TimeReadout class="readings" :instant="instant" :selected-date="date" />
+      </div>
       <DayLine
         class="day-line"
         :instant="instant"
@@ -78,12 +89,46 @@ const primaryZone = homeZone ?? ZONES[0]!
   padding-top: 24px;
 }
 
+.calendar {
+  display: none;
+}
+
 .day-controls {
   margin-bottom: 16px;
 }
 
 .day-line {
   margin-top: 20px;
+}
+
+/* The calendar replaces the day stepper wherever the page still fits on one screen with it. */
+@media (max-width: 699px) and (min-height: 745px), (min-width: 700px) and (min-height: 730px) {
+  .calendar {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .day-controls {
+    display: none;
+  }
+}
+
+@media (min-width: 700px) and (min-height: 730px) {
+  .top {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    align-items: end;
+    gap: 40px;
+  }
+
+  /* Three columns beside the calendar have less room than a full row. */
+  .readings :deep(.time) {
+    font-size: clamp(2rem, 4.6vw, 4.25rem);
+  }
+
+  .calendar {
+    margin-bottom: 0;
+  }
 }
 
 @media (min-width: 700px) {

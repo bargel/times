@@ -1,0 +1,1 @@
+export const FIRST_SELECTABLE_DATE = '2025-01-01'

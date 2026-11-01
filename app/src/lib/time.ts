@@ -89,12 +89,16 @@ export function wallClockToInstant(date: IsoDate, minuteOfDay: number, timeZone:
   return later
 }
 
+export function addDays(date: IsoDate, days: number): IsoDate {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10)
+}
+
 export function nextDate(date: IsoDate): IsoDate {
-  return new Date(Date.parse(`${date}T00:00:00Z`) + DAY_MS).toISOString().slice(0, 10)
+  return addDays(date, 1)
 }
 
 export function previousDate(date: IsoDate): IsoDate {
-  return new Date(Date.parse(`${date}T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10)
+  return addDays(date, -1)
 }
 
 export function dayAxis(date: IsoDate, timeZone: string): DayAxis {

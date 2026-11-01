@@ -22,9 +22,7 @@ Or from the repo root with Docker: `make up`, then <http://localhost:5174>.
 - `src/lib/time.ts`: all time zone arithmetic, with no Vue in it.
 - `src/lib/share.ts`: the two copied formats. Their exact output is pinned in `share.test.ts`, because people paste it.
 - `src/composables/useTimeSelection.ts`: the one moment the page shows.
-- `src/components/`: `DayLine` is the line, with `ZonePole` for each flag and `DayScene` for the picture.
-
-The design is written up in `../DESIGN.md`, and what the product is in `../PRODUCT.md`.
+- `src/components/`: `DayLine` is the line, with `ZonePole` for each flag and `DayScene` for the picture. `MonthCalendar` picks the day where the screen has room for it, and `DayControls` where it does not.
 
 ## When a place changes its clocks
 

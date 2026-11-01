@@ -33,7 +33,8 @@ export function useTimeSelection(homeTimeZone: string) {
   const pick = ref<Pick | null>(null)
 
   const isLive = computed(() => pick.value === null)
-  const date = computed(() => pick.value?.date ?? wallClockAt(now.value, homeTimeZone).date)
+  const today = computed(() => wallClockAt(now.value, homeTimeZone).date)
+  const date = computed(() => pick.value?.date ?? today.value)
   const axis = computed(() => dayAxis(date.value, homeTimeZone))
   const instant = computed(() =>
     pick.value ? axis.value.start + pick.value.slot * SLOT_MS : now.value,
@@ -70,6 +71,7 @@ export function useTimeSelection(homeTimeZone: string) {
 
   return {
     isLive,
+    today,
     date,
     axis,
     instant,

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import { FIRST_SELECTABLE_DATE } from '@/config/dates'
 import { nextDate, previousDate, shortDate, type IsoDate } from '@/lib/time'
 
-const FIRST_SELECTABLE_DATE = '2025-01-01'
+import ChevronButton from './ChevronButton.vue'
+import NowButton from './NowButton.vue'
 
 const props = defineProps<{ date: IsoDate; isLive: boolean }>()
 
@@ -37,15 +39,12 @@ function onFieldFocus() {
 <template>
   <div class="controls">
     <div class="day">
-      <button
-        type="button"
-        class="step"
-        aria-label="Previous day"
+      <ChevronButton
+        direction="back"
+        label="Previous day"
         :disabled="date <= FIRST_SELECTABLE_DATE"
         @click="emit('select', previousDate(date))"
-      >
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" /></svg>
-      </button>
+      />
 
       <label class="date" :class="{ typing }">
         <span class="date-text">{{ label }}</span>
@@ -63,17 +62,14 @@ function onFieldFocus() {
         />
       </label>
 
-      <button
-        type="button"
-        class="step"
-        aria-label="Next day"
+      <ChevronButton
+        direction="forward"
+        label="Next day"
         @click="emit('select', nextDate(date))"
-      >
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4l6 6-6 6" /></svg>
-      </button>
+      />
     </div>
 
-    <button type="button" class="now" :aria-pressed="isLive" @click="emit('followNow')">Now</button>
+    <NowButton :is-live="isLive" @click="emit('followNow')" />
   </div>
 </template>
 
@@ -83,44 +79,13 @@ function onFieldFocus() {
   gap: 8px;
 }
 
-.day,
-.now {
-  height: var(--control-height);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
-}
-
 .day {
   display: flex;
   flex: 1;
   min-width: 0;
-}
-
-.step {
-  flex: none;
-  width: var(--control-height);
-  padding: 0;
-  background: none;
-  border: 0;
+  height: var(--control-height);
+  border: 1px solid var(--edge);
   border-radius: var(--radius);
-  cursor: pointer;
-}
-
-.step:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.step svg {
-  display: block;
-  width: 20px;
-  height: 20px;
-  margin: auto;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .date {
@@ -170,28 +135,10 @@ function onFieldFocus() {
   cursor: text;
 }
 
-.now {
-  flex: none;
-  padding: 0 14px;
-  font-weight: 600;
-  background: none;
-  cursor: pointer;
-}
-
 @media (hover: hover) {
-  .step:hover:not(:disabled),
-  .now:hover,
   .date:hover {
     background: color-mix(in srgb, var(--ink) 8%, transparent);
   }
-}
-
-/* Filled while the page follows the clock; outlined once a time has been picked. */
-.now[aria-pressed='true'],
-.now[aria-pressed='true']:hover {
-  background: var(--ink);
-  color: var(--ground);
-  border-color: var(--ink);
 }
 
 @media (min-width: 700px) {
