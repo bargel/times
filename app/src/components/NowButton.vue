@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { t } from '@/lib/i18n'
+
 defineProps<{ isLive: boolean }>()
 </script>
 
 <template>
-  <button type="button" class="now" :aria-pressed="isLive">Now</button>
+  <button type="button" class="now" :aria-pressed="isLive">{{ t.now }}</button>
 </template>
 
 <style scoped>

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import { useClipboard } from '@/composables/useClipboard'
 import { ZONES } from '@/config/zones'
+import { t } from '@/lib/i18n'
 import { discordTimestamp, plainText } from '@/lib/share'
 
 const props = defineProps<{ instant: number }>()
@@ -18,7 +19,7 @@ const texts = computed<Record<Target, string>>(() => ({
 
 function label(button: Target, idle: string) {
   if (target.value !== button) return idle
-  return status.value === 'copied' ? 'Copied!' : 'Copy failed'
+  return status.value === 'copied' ? t.copied : t.copyFailed
 }
 
 const copyByHand = computed(() =>
@@ -30,25 +31,25 @@ const copyByHand = computed(() =>
   <div class="share">
     <div class="buttons">
       <button type="button" class="button primary" @click="copy(texts.discord, 'discord')">
-        {{ label('discord', 'Copy for Discord') }}
+        {{ label('discord', t.copyForDiscord) }}
       </button>
       <button type="button" class="button" @click="copy(texts.plain, 'plain')">
-        {{ label('plain', 'Copy plain text') }}
+        {{ label('plain', t.copyPlainText) }}
       </button>
     </div>
 
     <div v-if="copyByHand" class="by-hand">
-      <p class="note" role="alert">The browser blocked the clipboard. Copy this by hand:</p>
+      <p class="note" role="alert">{{ t.clipboardBlocked }}</p>
       <textarea
         class="text"
         readonly
-        aria-label="Text to copy"
+        :aria-label="t.textToCopy"
         :rows="copyByHand.split('\n').length"
         :value="copyByHand"
         @focus="($event.target as HTMLTextAreaElement).select()"
       />
     </div>
-    <span class="visually-hidden" role="status">{{ status === 'copied' ? 'Copied' : '' }}</span>
+    <span class="visually-hidden" role="status">{{ status === 'copied' ? t.copied : '' }}</span>
   </div>
 </template>
 
@@ -116,9 +117,17 @@ const copyByHand = computed(() =>
   resize: none;
 }
 
+/* To the right edge, under a right hand on a big phone or tablet. */
 @media (min-width: 700px) {
   .buttons {
     grid-template-columns: repeat(2, 200px);
+    justify-content: end;
+  }
+
+  .by-hand {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
   }
 
   .text {

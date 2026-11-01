@@ -20,7 +20,8 @@ Or from the repo root with Docker: `make up`, then <http://localhost:5174>.
 
 - `src/config/zones.ts`: the list of zones.
 - `src/lib/time.ts`: all time zone arithmetic, with no Vue in it.
-- `src/lib/share.ts`: the two copied formats. Their exact output is pinned in `share.test.ts`, because people paste it.
+- `src/lib/share.ts`: the two copied formats. Their exact output is pinned in `share.test.ts`, because people paste it, so they are not translated.
+- `src/lib/i18n.ts`: every word on the page in English, Ukrainian and Polish, chosen from the browser's languages.
 - `src/composables/useTimeSelection.ts`: the one moment the page shows.
 - `src/components/`: `DayLine` is the line, with `ZonePole` for each flag and `DayScene` for the picture. `MonthCalendar` picks the day where the screen has room for it, and `DayControls` where it does not.
 

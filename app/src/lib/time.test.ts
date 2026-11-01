@@ -10,7 +10,6 @@ import {
   isIsoDate,
   nextDate,
   previousDate,
-  shortDate,
   SLOT_MS,
   slotForZoneClock,
   wallClockAt,
@@ -253,10 +252,6 @@ describe('slotForZoneClock', () => {
 describe('display formats', () => {
   it('pads the big readout', () => {
     expect(clockDisplay({ hours: 9, minutes: 5 })).toBe('09:05')
-  })
-
-  it('writes dates in short form', () => {
-    expect(shortDate('2026-10-31')).toBe('Sat 31 Oct')
   })
 })
 

@@ -3,7 +3,6 @@ export type ZoneId = 'canada' | 'ukraine' | 'poland'
 export interface Zone {
   id: ZoneId
   country: string
-  city: string
   timeZone: string
   /** Goes into the copied plain text. The UI draws its own SVG flag instead. */
   emoji: string
@@ -21,7 +20,6 @@ export const ZONES: readonly Zone[] = [
   {
     id: 'canada',
     country: 'Canada',
-    city: 'Vancouver',
     timeZone: 'America/Vancouver',
     emoji: '🇨🇦',
     lane: 0,
@@ -29,7 +27,6 @@ export const ZONES: readonly Zone[] = [
   {
     id: 'ukraine',
     country: 'Ukraine',
-    city: 'Kyiv',
     timeZone: 'Europe/Kyiv',
     emoji: '🇺🇦',
     aliases: ['Europe/Kiev', 'Europe/Uzhgorod', 'Europe/Zaporozhye'],
@@ -38,7 +35,6 @@ export const ZONES: readonly Zone[] = [
   {
     id: 'poland',
     country: 'Poland',
-    city: 'Warsaw',
     timeZone: 'Europe/Warsaw',
     emoji: '🇵🇱',
     lane: 1,

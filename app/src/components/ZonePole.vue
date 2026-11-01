@@ -2,7 +2,8 @@
 import { computed, nextTick, ref, watch } from 'vue'
 
 import type { Zone } from '@/config/zones'
-import { clockDisplay, shortDate, SLOT_MINUTES, STEPS_ON_LINE, wallClockAt } from '@/lib/time'
+import { shortDate, t } from '@/lib/i18n'
+import { clockDisplay, SLOT_MINUTES, STEPS_ON_LINE, wallClockAt } from '@/lib/time'
 
 import ZoneFlag from './ZoneFlag.vue'
 
@@ -27,8 +28,9 @@ const emit = defineEmits<{
 
 const wall = computed(() => wallClockAt(props.instant, props.zone.timeZone))
 const step = computed(() => Math.round(props.position * STEPS_ON_LINE))
+const city = computed(() => t.cities[props.zone.id])
 const spoken = computed(
-  () => `${props.zone.city}, ${clockDisplay(wall.value)}, ${shortDate(wall.value.date)}`,
+  () => `${city.value}, ${clockDisplay(wall.value)}, ${shortDate(wall.value.date)}`,
 )
 
 function onSliderInput(event: Event) {
@@ -95,7 +97,7 @@ watch(
       min="0"
       :max="lastStep"
       :value="step"
-      :aria-label="`Time in ${zone.city}`"
+      :aria-label="t.timeIn(city)"
       :aria-valuetext="spoken"
       @input="onSliderInput"
       @keydown="onSliderKey"

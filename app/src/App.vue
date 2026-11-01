@@ -121,9 +121,9 @@ const primaryZone = homeZone ?? ZONES[0]!
     gap: 40px;
   }
 
-  /* Three columns beside the calendar have less room than a full row. */
+  /* The columns stop growing beside the calendar, so the numbers stop in time to stay apart. */
   .readings :deep(.time) {
-    font-size: clamp(2rem, 4.6vw, 4.25rem);
+    font-size: clamp(2rem, 4.6vw, 3.5rem);
   }
 
   .calendar {

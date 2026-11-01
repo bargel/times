@@ -136,16 +136,6 @@ export function clockDisplay({ hours, minutes }: Pick<WallClock, 'hours' | 'minu
   return `${pad2(hours)}:${pad2(minutes)}`
 }
 
-/** `Sat 31 Oct`. */
-export function shortDate(date: IsoDate): string {
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', {
-    timeZone: 'UTC',
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  })
-}
-
 export function minuteOfDay({ hours, minutes }: Pick<WallClock, 'hours' | 'minutes'>): number {
   return hours * 60 + minutes
 }

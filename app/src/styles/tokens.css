@@ -10,7 +10,8 @@
   --press: #2a3360;
   --selection: #ffd9ae;
 
-  --font: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Figtree has no Cyrillic: Onest sets those letters, and loads only on a page that has them. */
+  --font: 'Figtree Variable', 'Onest Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --radius: 8px;
   --control-height: 44px;

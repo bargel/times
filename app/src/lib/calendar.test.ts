@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { monthGrid, monthLabel, monthOf, shiftDateByMonths, shiftMonth } from './calendar'
+import { monthGrid, monthOf, shiftDateByMonths, shiftMonth } from './calendar'
 
 describe('monthGrid', () => {
   it('starts on a Monday, even when the month starts on one', () => {
@@ -42,8 +42,7 @@ describe('months', () => {
     expect(shiftDateByMonths('2026-03-31', -1)).toBe('2026-02-28')
   })
 
-  it('reads a month from a date and names it', () => {
+  it('reads a month from a date', () => {
     expect(monthOf('2026-11-15')).toBe('2026-11')
-    expect(monthLabel('2026-11')).toBe('November 2026')
   })
 })

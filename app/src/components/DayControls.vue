@@ -2,7 +2,8 @@
 import { computed, ref } from 'vue'
 
 import { FIRST_SELECTABLE_DATE } from '@/config/dates'
-import { nextDate, previousDate, shortDate, type IsoDate } from '@/lib/time'
+import { shortDate, t } from '@/lib/i18n'
+import { nextDate, previousDate, type IsoDate } from '@/lib/time'
 
 import ChevronButton from './ChevronButton.vue'
 import NowButton from './NowButton.vue'
@@ -41,7 +42,7 @@ function onFieldFocus() {
     <div class="day">
       <ChevronButton
         direction="back"
-        label="Previous day"
+        :label="t.previousDay"
         :disabled="date <= FIRST_SELECTABLE_DATE"
         @click="emit('select', previousDate(date))"
       />
@@ -51,7 +52,7 @@ function onFieldFocus() {
         <input
           class="date-input"
           type="date"
-          aria-label="Date"
+          :aria-label="t.date"
           :min="FIRST_SELECTABLE_DATE"
           :value="date"
           @pointerdown="pressed = true"
@@ -64,7 +65,7 @@ function onFieldFocus() {
 
       <ChevronButton
         direction="forward"
-        label="Next day"
+        :label="t.nextDay"
         @click="emit('select', nextDate(date))"
       />
     </div>

@@ -33,12 +33,3 @@ export function monthGrid(month: YearMonth): IsoDate[] {
     addDays(first, index - daysSinceMonday),
   )
 }
-
-/** `November 2026`. */
-export function monthLabel(month: YearMonth): string {
-  return new Date(`${month}-01T00:00:00Z`).toLocaleDateString('en-GB', {
-    timeZone: 'UTC',
-    month: 'long',
-    year: 'numeric',
-  })
-}

@@ -2,7 +2,8 @@
 import { computed } from 'vue'
 
 import { ZONES } from '@/config/zones'
-import { clock12, clockDisplay, shortDate, wallClockAt, type IsoDate } from '@/lib/time'
+import { shortDate, t } from '@/lib/i18n'
+import { clock12, clockDisplay, wallClockAt, type IsoDate } from '@/lib/time'
 
 import ZoneFlag from './ZoneFlag.vue'
 
@@ -27,7 +28,7 @@ const readings = computed(() =>
     <div v-for="reading in readings" :key="reading.zone.id" class="zone">
       <dt class="place">
         <ZoneFlag class="place-flag" :zone="reading.zone.id" />
-        {{ reading.zone.city }}
+        {{ t.cities[reading.zone.id] }}
       </dt>
       <dd class="time">{{ reading.time }}</dd>
       <dd class="detail">{{ reading.time12 }}</dd>

@@ -2,14 +2,14 @@
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import { FIRST_SELECTABLE_DATE } from '@/config/dates'
-import { monthGrid, monthLabel, monthOf, shiftDateByMonths, shiftMonth } from '@/lib/calendar'
-import { addDays, shortDate, type IsoDate } from '@/lib/time'
+import { monthGrid, monthOf, shiftDateByMonths, shiftMonth } from '@/lib/calendar'
+import { monthLabel, shortDate, t } from '@/lib/i18n'
+import { addDays, type IsoDate } from '@/lib/time'
 
 import ChevronButton from './ChevronButton.vue'
 import NowButton from './NowButton.vue'
 
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
-const DAYS_IN_WEEK = WEEKDAYS.length
+const DAYS_IN_WEEK = 7
 
 const props = defineProps<{ date: IsoDate; today: IsoDate; isLive: boolean }>()
 
@@ -69,18 +69,18 @@ function moveFocus(event: KeyboardEvent, from: IsoDate) {
 </script>
 
 <template>
-  <section class="calendar" :aria-label="`Calendar, ${monthLabel(shownMonth)}`">
+  <section class="calendar" :aria-label="`${t.calendar}, ${monthLabel(shownMonth)}`">
     <div class="header">
       <ChevronButton
         direction="back"
-        label="Previous month"
+        :label="t.previousMonth"
         :disabled="atFirstMonth"
         @click="shownMonth = shiftMonth(shownMonth, -1)"
       />
       <h2 class="month" aria-live="polite">{{ monthLabel(shownMonth) }}</h2>
       <ChevronButton
         direction="forward"
-        label="Next month"
+        :label="t.nextMonth"
         @click="shownMonth = shiftMonth(shownMonth, 1)"
       />
       <NowButton class="now-button" :is-live="isLive" @click="followNow" />
@@ -89,7 +89,7 @@ function moveFocus(event: KeyboardEvent, from: IsoDate) {
     <table ref="grid" class="grid" role="grid">
       <thead>
         <tr>
-          <th v-for="weekday in WEEKDAYS" :key="weekday" class="weekday" scope="col">
+          <th v-for="weekday in t.weekdays" :key="weekday" class="weekday" scope="col">
             {{ weekday }}
           </th>
         </tr>
@@ -139,6 +139,13 @@ function moveFocus(event: KeyboardEvent, from: IsoDate) {
   white-space: nowrap;
 }
 
+/* The narrowest phones leave too little room beside the buttons for the longest month names. */
+@media (max-width: 359px) {
+  .month {
+    font-size: 15px;
+  }
+}
+
 .now-button {
   margin-left: 8px;
 }
@@ -158,30 +165,51 @@ function moveFocus(event: KeyboardEvent, from: IsoDate) {
   color: var(--ink-soft);
 }
 
+.weekday:nth-child(n + 6) {
+  color: var(--sunset);
+}
+
 td {
   padding: 0;
 }
 
 .day {
+  position: relative;
   display: block;
   width: 100%;
   height: 38px;
   padding: 0;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 400;
   background: none;
   border: 0;
   border-radius: var(--radius);
   cursor: pointer;
 }
 
+/*
+ * Weekends, softer than their headers, so a date that differs in the readout stays the loudest.
+ * :where keeps this weak, so the other-month and selected looks below still win.
+ */
+:where(td:nth-child(n + 6)) .day {
+  color: color-mix(in srgb, var(--sunset) 70%, var(--ink-soft));
+}
+
 .day.other-month {
-  font-weight: 400;
   color: var(--ink-soft);
 }
 
-.day.today {
-  box-shadow: inset 0 0 0 1.5px var(--edge);
+/* A dot in the text colour, so it still shows on the selected day's fill. */
+.day.today::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .day:disabled {
@@ -200,6 +228,5 @@ td {
   background: var(--ink);
   color: var(--ground);
   font-weight: 700;
-  box-shadow: none;
 }
 </style>
