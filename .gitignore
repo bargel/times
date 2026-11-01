@@ -1,1 +1,9 @@
 .vscode
+.playwright-mcp/
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/build/
+.impeccable/config.local.json
+.impeccable/questions/
+.impeccable/critique/
+.impeccable/hook.cache.json

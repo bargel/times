@@ -1,0 +1,35 @@
+:root {
+  color-scheme: light dark;
+
+  /* Daylight: night-navy ink on a pale sky. */
+  --ground: #f3f7fb;
+  --ink: #12183a;
+  --ink-soft: #4f5775;
+  --edge: #7f88a6;
+  --sunset: #b5400d;
+  --press: #2a3360;
+  --selection: #ffd9ae;
+
+  --font: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --radius: 8px;
+  --control-height: 44px;
+
+  /* Room past 24:00 so a flag at the very end still fits on screen. */
+  --line-tail: 32px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Night: moonlit ink on the sky's own navy. */
+    --ground: #0c1029;
+    --ink: #eef1fb;
+    --ink-soft: #a7afcd;
+    --edge: #5f688f;
+    --sunset: #ffb27a;
+    --press: #cdd3ea;
+    --selection: #5b3a2a;
+  }
+}

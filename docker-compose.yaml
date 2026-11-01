@@ -1,7 +1,7 @@
 services:
   times:
     container_name: times
-    image: node:20
+    image: node:22
     volumes:
       - ./app:/app
     ports:

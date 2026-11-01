@@ -1,0 +1,9 @@
+import '@fontsource-variable/figtree/wght.css'
+import './styles/tokens.css'
+import './styles/base.css'
+
+import { createApp } from 'vue'
+
+import App from './App.vue'
+
+createApp(App).mount('#app')

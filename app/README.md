@@ -1,29 +1,41 @@
-# times
+# PLUACAN
 
-This template should help get you started developing with Vue 3 in Vite.
+One moment in Vancouver, Kyiv and Warsaw, ready to paste into Discord. Live at <https://times.brgl.dev/>.
 
-## Recommended IDE Setup
+## Run it
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+Needs Node 22.
 
 ```sh
 npm install
+npm run dev        # dev server
+npm test           # time logic and copy formats
+npm run typecheck
+npm run build      # into dist/
 ```
 
-### Compile and Hot-Reload for Development
+Or from the repo root with Docker: `make up`, then <http://localhost:5174>.
 
-```sh
-npm run dev
-```
+## Where things are
 
-### Compile and Minify for Production
+- `src/config/zones.ts`: the list of zones.
+- `src/lib/time.ts`: all time zone arithmetic, with no Vue in it.
+- `src/lib/share.ts`: the two copied formats. Their exact output is pinned in `share.test.ts`, because people paste it.
+- `src/composables/useTimeSelection.ts`: the one moment the page shows.
+- `src/components/`: `DayLine` is the line, with `ZonePole` for each flag and `DayScene` for the picture.
 
-```sh
-npm run build
-```
+The design is written up in `../DESIGN.md`, and what the product is in `../PRODUCT.md`.
+
+## When a place changes its clocks
+
+Offsets come from the time zone data on each device, so an older phone keeps following old rules. When a place changes its rules, add the change to `src/config/timeZoneRules.ts` with a test in `time.test.ts`. British Columbia's permanent UTC-7 is the first entry. The IANA [NEWS](https://data.iana.org/time-zones/tzdb/NEWS) file announces these changes.
+
+## Add a zone
+
+Add an entry to `ZONES` in `src/config/zones.ts`, and its flag to `src/assets/flags/` and `ZoneFlag.vue`. Pick its `lane` so its pole does not cross a flag it can stand near.
+
+## Deploy
+
+A push to `master` runs `.github/workflows/deploy.yml`: tests, typecheck and build, then GitHub Pages. If any check fails, nothing is deployed.
+
+Home-screen icons keep working as long as the address and `public/favicon.*` stay where they are. There is deliberately no service worker, so a new version reaches everyone the next time they open the page.
