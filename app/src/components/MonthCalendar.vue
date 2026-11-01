@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
+import { usePageSwipe } from '@/composables/usePageSwipe'
 import { FIRST_SELECTABLE_DATE } from '@/config/dates'
 import { monthGrid, monthOf, shiftDateByMonths, shiftMonth } from '@/lib/calendar'
 import { monthLabel, shortDate, t } from '@/lib/i18n'
@@ -30,6 +31,14 @@ const weeks = computed(() =>
   ),
 )
 const atFirstMonth = computed(() => shownMonth.value <= monthOf(FIRST_SELECTABLE_DATE))
+
+const swipe = usePageSwipe(
+  useTemplateRef('sheet'),
+  (step) => step >= 0 || !atFirstMonth.value,
+  (step) => {
+    shownMonth.value = shiftMonth(shownMonth.value, step)
+  },
+)
 
 function followNow() {
   shownMonth.value = monthOf(props.today)
@@ -86,40 +95,50 @@ function moveFocus(event: KeyboardEvent, from: IsoDate) {
       <NowButton class="now-button" :is-live="isLive" @click="followNow" />
     </div>
 
-    <table ref="grid" class="grid" role="grid">
-      <thead>
-        <tr>
-          <th v-for="weekday in t.weekdays" :key="weekday" class="weekday" scope="col">
-            {{ weekday }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="week in weeks" :key="week[0]">
-          <td v-for="day in week" :key="day">
-            <button
-              type="button"
-              class="day"
-              :class="{
-                selected: day === date,
-                today: day === today,
-                'other-month': monthOf(day) !== shownMonth,
-              }"
-              :data-date="day"
-              :tabindex="day === tabStop ? 0 : -1"
-              :disabled="day < FIRST_SELECTABLE_DATE"
-              :aria-label="`${shortDate(day)} ${day.slice(0, 4)}`"
-              :aria-pressed="day === date"
-              :aria-current="day === today ? 'date' : undefined"
-              @click="emit('select', day)"
-              @keydown="moveFocus($event, day)"
-            >
-              {{ Number(day.slice(8)) }}
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div
+      class="swipe-area"
+      :class="{ swiping: swipe.swiping.value }"
+      @pointerdown="swipe.onPointerDown"
+      @pointermove="swipe.onPointerMove"
+      @pointerup="swipe.onPointerUp"
+      @pointercancel="swipe.onPointerCancel"
+      @click.capture="swipe.onClickCapture"
+    >
+      <table ref="grid" class="grid" role="grid">
+        <thead>
+          <tr>
+            <th v-for="weekday in t.weekdays" :key="weekday" class="weekday" scope="col">
+              {{ weekday }}
+            </th>
+          </tr>
+        </thead>
+        <tbody ref="sheet">
+          <tr v-for="week in weeks" :key="week[0]">
+            <td v-for="day in week" :key="day">
+              <button
+                type="button"
+                class="day"
+                :class="{
+                  selected: day === date,
+                  today: day === today,
+                  'other-month': monthOf(day) !== shownMonth,
+                }"
+                :data-date="day"
+                :tabindex="day === tabStop ? 0 : -1"
+                :disabled="day < FIRST_SELECTABLE_DATE"
+                :aria-label="`${shortDate(day)} ${day.slice(0, 4)}`"
+                :aria-pressed="day === date"
+                :aria-current="day === today ? 'date' : undefined"
+                @click="emit('select', day)"
+                @keydown="moveFocus($event, day)"
+              >
+                {{ Number(day.slice(8)) }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 </template>
 
@@ -171,6 +190,22 @@ function moveFocus(event: KeyboardEvent, from: IsoDate) {
 
 td {
   padding: 0;
+}
+
+/*
+ * Sideways movement here belongs to the page turn. The whole area listens, not just the days:
+ * a quick next swipe can land while the days are still sliding away from under the finger.
+ */
+.swipe-area {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Holds only while the page is off its place, so it never clips a focus ring. */
+
+.swiping {
+  overflow: hidden;
 }
 
 .day {
