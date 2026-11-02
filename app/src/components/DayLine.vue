@@ -1,8 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 
+import { groundOf, SEASON_LOOKS } from '@/config/scenery'
 import { ZONES, type Zone } from '@/config/zones'
-import { DAY_MINUTES, minuteOfDay, SLOT_MINUTES, STEPS_ON_LINE, wallClockAt } from '@/lib/time'
+import { moonPhase } from '@/lib/moon'
+import { colourAt, inkReadsBetter, isFestive, seasonOf } from '@/lib/scenery'
+import {
+  DAY_MINUTES,
+  minuteOfDay,
+  SLOT_MINUTES,
+  STEPS_ON_LINE,
+  wallClockAt,
+  type IsoDate,
+} from '@/lib/time'
 
 import DayScene from './DayScene.vue'
 import ZonePole from './ZonePole.vue'
@@ -18,7 +28,17 @@ const props = defineProps<{
   homeZone: Zone | undefined
   /** The zone whose clock the picture and the numbers control. */
   primaryZone: Zone
+  /** The day picked in the calendar, which dresses the picture in its season. */
+  date: IsoDate
 }>()
+
+const season = computed(() => seasonOf(props.date))
+
+/** Each hour and half-hour dot, white or dark, whichever reads better on the ground under it. */
+const inked = computed(() => {
+  const ground = groundOf(SEASON_LOOKS[season.value])
+  return (hours: number) => inkReadsBetter(colourAt(ground, hours / 24))
+})
 
 const emit = defineEmits<{ move: [timeZone: string, minute: number] }>()
 
@@ -104,13 +124,13 @@ function onLineRelease() {
       @pointermove="onLineMove"
       @lostpointercapture="onLineRelease"
     >
-      <DayScene />
+      <DayScene :season="season" :festive="isFestive(date)" :moon-phase="moonPhase(date)" />
       <div class="hours" aria-hidden="true">
         <span
           v-for="hour in HOURS"
           :key="hour"
           class="hour"
-          :class="{ sixth: hour % 6 === 0, touched: touchedHours.has(hour) }"
+          :class="{ sixth: hour % 6 === 0, touched: touchedHours.has(hour), ink: inked(hour) }"
           :style="{ left: along(hour / 24) }"
         >
           {{ String(hour).padStart(2, '0') }}
@@ -119,7 +139,7 @@ function onLineRelease() {
           v-for="hour in HALF_HOURS"
           :key="`half-${hour}`"
           class="half-hour"
-          :class="{ touched: touchedSteps.has(hour * 2 + 1) }"
+          :class="{ touched: touchedSteps.has(hour * 2 + 1), ink: inked(hour + 0.5) }"
           :style="{ left: along((hour + 0.5) / 24) }"
         />
       </div>
@@ -217,6 +237,24 @@ function onLineRelease() {
   background: #fff;
 }
 
+/* Over light ground, as winter snow by day, the hours turn Night Ink. */
+.hour.ink {
+  color: rgb(18 24 58 / 0.8);
+}
+
+.hour.ink.touched {
+  color: #12183a;
+}
+
+.half-hour.ink {
+  background: rgb(18 24 58 / 0.45);
+}
+
+.half-hour.ink.touched,
+.half-hour.ink.touched::after {
+  background: #12183a;
+}
+
 /* Past the lowest flag and its touch area, so a tap on the buttons below can't catch it. */
 .poles {
   position: relative;
@@ -264,6 +302,14 @@ function onLineRelease() {
     height: 6px;
     margin-left: -0.75px;
     background: rgb(255 255 255 / 0.8);
+  }
+
+  .hour.ink::after {
+    background: rgb(18 24 58 / 0.45);
+  }
+
+  .hour.ink.sixth::after {
+    background: rgb(18 24 58 / 0.8);
   }
 }
 

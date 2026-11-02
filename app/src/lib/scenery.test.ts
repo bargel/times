@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { colourAt, ridgePath, ridgeTop, type ColourStop } from './scenery'
+import {
+  colourAt,
+  inkReadsBetter,
+  isFestive,
+  ridgePath,
+  ridgeTop,
+  seasonOf,
+  type ColourStop,
+} from './scenery'
 
 const STOPS: ColourStop[] = [
   [0, '#000000'],
@@ -34,5 +42,40 @@ describe('ridges', () => {
     const path = ridgePath(ridge)
     expect(path).toMatch(/^M0 /)
     expect(path).toMatch(/L1200 [\d.]+V100H0Z$/)
+  })
+})
+
+describe('seasonOf', () => {
+  it('follows the months of the northern year', () => {
+    expect(seasonOf('2026-12-01')).toBe('winter')
+    expect(seasonOf('2027-02-28')).toBe('winter')
+    expect(seasonOf('2027-03-01')).toBe('spring')
+    expect(seasonOf('2027-05-31')).toBe('spring')
+    expect(seasonOf('2027-06-01')).toBe('summer')
+    expect(seasonOf('2027-08-31')).toBe('summer')
+    expect(seasonOf('2026-09-01')).toBe('autumn')
+    expect(seasonOf('2026-11-30')).toBe('autumn')
+  })
+})
+
+describe('isFestive', () => {
+  it('lasts all of December and January', () => {
+    expect(isFestive('2026-11-30')).toBe(false)
+    expect(isFestive('2026-12-01')).toBe(true)
+    expect(isFestive('2027-01-31')).toBe(true)
+    expect(isFestive('2027-02-01')).toBe(false)
+  })
+})
+
+describe('inkReadsBetter', () => {
+  it('keeps the hours white over dark ground', () => {
+    expect(inkReadsBetter('#090d24')).toBe(false)
+    expect(inkReadsBetter('#2f6656')).toBe(false)
+    expect(inkReadsBetter('#3a467f')).toBe(false)
+  })
+
+  it('turns them dark over snow', () => {
+    expect(inkReadsBetter('#e9eef3')).toBe(true)
+    expect(inkReadsBetter('#cdb3ad')).toBe(true)
   })
 })

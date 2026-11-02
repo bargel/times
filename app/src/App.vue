@@ -66,6 +66,7 @@ const primaryZone = homeZone ?? ZONES[0]!
         :at-day-end="atDayEnd"
         :home-zone="homeZone"
         :primary-zone="primaryZone"
+        :date="date"
         @move="moveZoneClock"
       />
       <ShareActions :instant="instant" :is-live="isLive" />

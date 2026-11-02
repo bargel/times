@@ -1,4 +1,4 @@
-import type { ColourStop, Ridge } from '@/lib/scenery'
+import type { ColourStop, Ridge, Season } from '@/lib/scenery'
 
 /*
  * The day as one picture: midnight at both ends, noon in the middle. Places run 0 to 1 across it.
@@ -8,7 +8,8 @@ import type { ColourStop, Ridge } from '@/lib/scenery'
 /** Night ends where windows go dark, and starts again where they light up. */
 export const isNightAt = (place: number) => place < 0.25 || place > 0.79
 
-export const FAR_HILLS: readonly ColourStop[] = [
+/* Summer's hills. The other seasons keep their nights, dawns and dusks and change their days. */
+const FAR_HILLS: readonly ColourStop[] = [
   [0, '#1b2350'],
   [0.2, '#252f68'],
   [0.255, '#6d5a86'],
@@ -21,7 +22,7 @@ export const FAR_HILLS: readonly ColourStop[] = [
   [1, '#1b2350'],
 ]
 
-export const MID_HILLS: readonly ColourStop[] = [
+const MID_HILLS: readonly ColourStop[] = [
   [0, '#121839'],
   [0.2, '#19204a'],
   [0.26, '#4f4058'],
@@ -33,7 +34,7 @@ export const MID_HILLS: readonly ColourStop[] = [
 ]
 
 /** The near hill and the ground strip under it, dark enough everywhere to carry white hours. */
-export const NEAR_HILL: readonly ColourStop[] = [
+const NEAR_HILL: readonly ColourStop[] = [
   [0, '#090d24'],
   [0.2, '#0d1230'],
   [0.28, '#3f3438'],
@@ -59,29 +60,60 @@ export interface Figure {
   windows?: readonly (readonly [number, number, number, number])[]
   /** Drawn only at night, in fire colours. */
   fire?: string
-  /** A thin line of chimney smoke. */
+  /** A thin line of chimney smoke, drawn up from the chimney. */
   smoke?: string
   /** Sails that turn slowly around `[x, y]`. */
   sails?: { centre: readonly [number, number]; path: string }
+  /** The roof line, where snow lies in winter and a garland hangs on festive nights. */
+  roof?: string
+  /** A treetop's cap of snow in winter. */
+  snowcap?: string
+  /** A tree's bulbs on festive nights, `[x, y]`, and the star at its top. */
+  lights?: { bulbs: readonly (readonly [number, number])[]; star: readonly [number, number] }
+  /** Spots of spring blossom in its crown, `[x, y]`. */
+  blossom?: readonly (readonly [number, number])[]
 }
 
 const HOUSE = 'M1 10V5L6 1l5 4v5ZM8 4.4V1.2h1.4v4.4Z'
+const HOUSE_ROOF = 'M.7 5.1 6 .8l5.3 4.3'
 
 export const FIGURES = {
-  pine: { viewBox: [0, 0, 6, 13], body: 'M3 0l2 4.4h-.9l1.6 4H4.5L6 12.2H3.5V13h-1v-.8H0l1.5-3.8H.3l1.6-4H1Z' },
-  fir: { viewBox: [0, 0, 4, 14], body: 'M2 0c.9 3.6 1.5 8.4 2 13H2.4v1h-.8v-1H0C.5 8.4 1.1 3.6 2 0Z' },
+  pine: {
+    viewBox: [0, 0, 6, 13],
+    body: 'M3 0l2 4.4h-.9l1.6 4H4.5L6 12.2H3.5V13h-1v-.8H0l1.5-3.8H.3l1.6-4H1Z',
+    snowcap: 'M3-.1 4.3 2.7H1.7Z',
+    lights: {
+      bulbs: [[2.2, 4.8], [3.9, 5.4], [1.6, 8.9], [3.2, 9.6], [4.6, 9.1], [1.2, 11.6], [2.8, 12], [4.6, 11.7]],
+      star: [3, -1.6],
+    },
+  },
+  fir: {
+    viewBox: [0, 0, 4, 14],
+    body: 'M2 0c.9 3.6 1.5 8.4 2 13H2.4v1h-.8v-1H0C.5 8.4 1.1 3.6 2 0Z',
+    snowcap: 'M2-.1c.35 1.4.6 2.7.75 4h-1.5C1.4 2.6 1.65 1.3 2-.1Z',
+    lights: {
+      bulbs: [[1.7, 4.5], [2.3, 6.4], [1.4, 8.4], [2.6, 9.6], [1.2, 11.4], [2.9, 12.2]],
+      star: [2, -1.6],
+    },
+  },
   oak: {
     viewBox: [0, 0, 10, 10],
     body: 'M5 .4a3.6 3.6 0 0 1 3.4 3.2 2.6 2.6 0 0 1-.8 4.6H5.6V10H4.4V8.2H2.4a2.6 2.6 0 0 1-.8-4.6A3.6 3.6 0 0 1 5 .4Z',
+    blossom: [[3, 2.2], [5.4, 1.4], [7, 3.2], [2.2, 5.2], [4.6, 4.4], [7.6, 6], [3.8, 6.8], [6, 6.6]],
   },
   poplar: { viewBox: [0, 0, 4, 15], body: 'M2 0c1.5 2.4 1.9 7.6 1 12h-.6v3h-.8v-3H1C.1 7.6.5 2.4 2 0Z' },
-  bush: { viewBox: [0, 0, 8, 4], body: 'M0 4c0-1.8 1.3-2.8 2.7-2.4C3.3.3 5.1 0 6 1.3 7.3 1.3 8 2.6 8 4Z' },
-  house: { viewBox: [0, 0, 12, 10], body: HOUSE, windows: [[4.9, 6, 2.2, 2.2]] },
+  bush: {
+    viewBox: [0, 0, 8, 4],
+    body: 'M0 4c0-1.8 1.3-2.8 2.7-2.4C3.3.3 5.1 0 6 1.3 7.3 1.3 8 2.6 8 4Z',
+    blossom: [[1.6, 2.6], [3.4, 1.6], [5.4, 1.8], [6.8, 3], [4.4, 3]],
+  },
+  house: { viewBox: [0, 0, 12, 10], body: HOUSE, windows: [[4.9, 6, 2.2, 2.2]], roof: HOUSE_ROOF },
   cottage: {
     viewBox: [0, -7, 12, 17],
     body: HOUSE,
     windows: [[3.2, 6, 2, 2]],
     smoke: 'M8.7 1c-.7-2 1.1-3 .3-4.8S10.4-6 10-7',
+    roof: HOUSE_ROOF,
   },
   tallHouse: {
     viewBox: [0, 0, 9, 14],
@@ -92,8 +124,14 @@ export const FIGURES = {
       [2, 9.6, 1.8, 1.8],
       [5.2, 9.6, 1.8, 1.8],
     ],
+    roof: 'M.4 5 4.5 1.1 8.6 5',
   },
-  barn: { viewBox: [0, 0, 16, 10], body: 'M.6 10V4.4l1.8-3L8 0l5.6 1.4 1.8 3V10Z', windows: [[7.1, 3, 1.8, 1.8]] },
+  barn: {
+    viewBox: [0, 0, 16, 10],
+    body: 'M.6 10V4.4l1.8-3L8 0l5.6 1.4 1.8 3V10Z',
+    windows: [[7.1, 3, 1.8, 1.8]],
+    roof: 'M.6 4.4l1.8-3L8 0l5.6 1.4 1.8 3',
+  },
   windmill: {
     viewBox: [-3, -3, 14, 17],
     body: 'M2.3 14l.8-9.4h1.8l.8 9.4ZM2.7 5 4 3l1.3 2Z',
@@ -113,6 +151,105 @@ export const FIGURES = {
 } satisfies Record<string, Figure>
 
 export type FigureKind = keyof typeof FIGURES
+
+/** How a season dresses the picture. */
+export interface SeasonLook {
+  far: readonly ColourStop[]
+  mid: readonly ColourStop[]
+  near: readonly ColourStop[]
+  /** The strip the hours stand on, where it isn't the near hill's own colours. */
+  ground?: readonly ColourStop[]
+  /** The figures' colours, where they can't wear the near hill's: dark on snow. */
+  figures?: readonly ColourStop[]
+  /** Day colours for some kinds of figure, as trees turn in autumn. */
+  tints?: Partial<Record<FigureKind, string>>
+  /** Snow on the roofs and treetops, and snow falling. */
+  snow?: true
+  /** Blossom on trees and bushes by day, and petals drifting down. */
+  blossom?: true
+  /** Leaves drifting down by day. */
+  leaves?: true
+  /** Fireflies by the ground at night. */
+  fireflies?: true
+}
+
+/** The same hills under another colour through the full day, between dawn and dusk. */
+const byDay = (stops: readonly ColourStop[], colour: string): readonly ColourStop[] =>
+  stops.map(([at, own]) => [at, at >= 0.33 && at <= 0.68 ? colour : own])
+
+export const SEASON_LOOKS: Record<Season, SeasonLook> = {
+  summer: { far: FAR_HILLS, mid: MID_HILLS, near: NEAR_HILL, fireflies: true },
+  autumn: {
+    far: byDay(FAR_HILLS, '#b5bfa4'),
+    mid: byDay(MID_HILLS, '#a8843f'),
+    near: byDay(NEAR_HILL, '#4d4424'),
+    tints: { oak: '#b8582a', poplar: '#cf9a2c', bush: '#93452a' },
+    leaves: true,
+  },
+  /* Snow down to the hours, which turn dark where it's light. On snow the figures stand dark. */
+  winter: {
+    far: [
+      [0, '#2c3770'],
+      [0.2, '#3a4684'],
+      [0.255, '#8a7f9e'],
+      [0.3, '#ead2cf'],
+      [0.38, '#eef3f8'],
+      [0.66, '#eef3f8'],
+      [0.73, '#efd6c8'],
+      [0.79, '#93809e'],
+      [0.86, '#3a4684'],
+      [1, '#2c3770'],
+    ],
+    mid: [
+      [0, '#1c2452'],
+      [0.2, '#26306a'],
+      [0.26, '#6f6788'],
+      [0.33, '#d3dde8'],
+      [0.67, '#d3dde8'],
+      [0.75, '#a9909a'],
+      [0.84, '#26306a'],
+      [1, '#1c2452'],
+    ],
+    near: [
+      [0, '#3a4680'],
+      [0.2, '#46528e'],
+      [0.28, '#b8a8b8'],
+      [0.38, '#f4f7fa'],
+      [0.68, '#f4f7fa'],
+      [0.78, '#d6bcb4'],
+      [0.86, '#46528e'],
+      [1, '#3a4680'],
+    ],
+    ground: [
+      [0, '#2e3a72'],
+      [0.2, '#3a467f'],
+      [0.28, '#a698ae'],
+      [0.36, '#e9eef3'],
+      [0.7, '#e9eef3'],
+      [0.78, '#cdb3ad'],
+      [0.86, '#3a467f'],
+      [1, '#2e3a72'],
+    ],
+    figures: [
+      [0, '#121a44'],
+      [0.22, '#1a2352'],
+      [0.32, '#4a5a6e'],
+      [0.68, '#4a5a6e'],
+      [0.78, '#3a3550'],
+      [1, '#121a44'],
+    ],
+    snow: true,
+  },
+  spring: {
+    far: byDay(FAR_HILLS, '#a9d5cb'),
+    mid: byDay(MID_HILLS, '#83b67d'),
+    near: byDay(NEAR_HILL, '#2c6844'),
+    blossom: true,
+  },
+}
+
+/** The strip the hours stand on. */
+export const groundOf = (look: SeasonLook) => look.ground ?? look.near
 
 /** Life on the near hill, by the hour it stands at. `wide` ones only show where the line has room. */
 export const LIFE: readonly { kind: FigureKind; hour: number; size?: number; wide?: true }[] = [
