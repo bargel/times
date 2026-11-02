@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import {
+  BAT,
   BIRDS,
   CLOUDS,
   FIGURES,
@@ -11,11 +12,17 @@ import {
   RIDGES,
   SEASON_LOOKS,
   STARS,
+  STORK,
   type Figure,
 } from '@/config/scenery'
 import { moonLight } from '@/lib/moon'
+import type { Occasion } from '@/lib/occasions'
 import { colourAt, ridgePath, ridgeTop, type Season } from '@/lib/scenery'
 import { nextShootingStar, nextShootingStarDelay, type ShootingStar } from '@/lib/shootingStar'
+
+import SceneEgg from './SceneEgg.vue'
+import ScenePumpkin from './ScenePumpkin.vue'
+import SceneSkyEvents from './SceneSkyEvents.vue'
 
 const props = defineProps<{
   season: Season
@@ -23,7 +30,24 @@ const props = defineProps<{
   festive: boolean
   /** Where the moon is in its cycle on the picked day, 0 new to 0.5 full and back. */
   moonPhase: number
+  /** What the picked day leaves in the picture. */
+  occasions: ReadonlySet<Occasion>
 }>()
+
+/** Where the Easter egg hides in the grass, between the poplars and the windmill. */
+const EGG_PLACE = 10.5 / 24
+const eggStyle = { left: `${EGG_PLACE * 100}%`, top: `${ridgeTop(RIDGES.near, EGG_PLACE)}%` }
+
+/** Sparks over the Kupala fire: `[drift sideways, seconds to rise]`. Only four on a phone. */
+const SPARKS = [
+  [-3, 1.4],
+  [2, 1.8],
+  [-1, 2.2],
+  [4, 1.5],
+  [0, 1.9],
+  [-4, 2.1],
+  [3, 1.6],
+] as const
 
 const look = computed(() => SEASON_LOOKS[props.season])
 
@@ -45,7 +69,7 @@ const BULB_COLOURS = ['#ff5a5a', '#ffd34d', '#5ad1ff', '#7dff8a']
  */
 const life = computed(() => {
   let trees = 0
-  return LIFE.map(({ kind, hour, size = 1, wide }) => {
+  return LIFE.map(({ kind, hour, size = 1, wide, stork }) => {
     const place = hour / 24
     const figure: Figure = FIGURES[kind]
     const [x, y, width, height] = figure.viewBox
@@ -58,6 +82,7 @@ const life = computed(() => {
       isNight,
       colour: tint ?? colourAt(look.value.figures ?? look.value.near, place),
       lit: props.festive && isNight && figure.lights !== undefined && trees++ % 2 === 0,
+      nest: stork && props.occasions.has('storks') ? figure.nest : undefined,
       viewBox: `${x} ${y} ${width} ${height}`,
       style: {
         left: `${place * 100}%`,
@@ -128,7 +153,7 @@ onUnmounted(() => clearTimeout(waiting))
 </script>
 
 <template>
-  <div class="scene" aria-hidden="true">
+  <div class="scene" :class="{ 'upside-down': occasions.has('aprilFools') }" aria-hidden="true">
     <div class="sky">
       <i
         v-for="([x, y, size], index) in STARS"
@@ -155,21 +180,41 @@ onUnmounted(() => clearTimeout(waiting))
           d="M1 6C-.4 6 0 3.6 1.8 3.8 2.2 1.8 4.6 1.4 5.8 2.8 6.6.4 10 0 11.4 2c1.2-1.2 3.8-.6 4.2 1.4 2-.4 3 1.6 1.8 2.6Z"
         />
       </svg>
-      <svg
-        v-for="([x, y, size], index) in BIRDS"
-        :key="`bird-${x}`"
-        class="bird"
-        viewBox="0 0 4 1.6"
-        :style="{
-          left: `${x}%`,
-          top: `${y}%`,
-          width: `calc(${5 * size} * var(--unit))`,
-          '--phase': `${-index * 0.9}s`,
-        }"
-      >
-        <path class="wing" d="M0 1.4Q1 0 2 1.2" />
-        <path class="wing right" d="M2 1.2Q3 0 4 1.4" />
-      </svg>
+      <!-- On Halloween the birds are bats. -->
+      <template v-if="occasions.has('halloween')">
+        <svg
+          v-for="([x, y, size], index) in BIRDS"
+          :key="`bat-${x}`"
+          class="bat"
+          :viewBox="BAT.viewBox"
+          :style="{
+            left: `${x}%`,
+            top: `${y}%`,
+            width: `calc(${6 * size} * var(--unit))`,
+            '--phase': `${-index * 0.6}s`,
+          }"
+        >
+          <path :d="BAT.body" />
+          <path v-for="wing in BAT.wings" :key="wing" class="bat-wing" :d="wing" />
+        </svg>
+      </template>
+      <template v-else>
+        <svg
+          v-for="([x, y, size], index) in BIRDS"
+          :key="`bird-${x}`"
+          class="bird"
+          viewBox="0 0 4 1.6"
+          :style="{
+            left: `${x}%`,
+            top: `${y}%`,
+            width: `calc(${5 * size} * var(--unit))`,
+            '--phase': `${-index * 0.9}s`,
+          }"
+        >
+          <path class="wing" d="M0 1.4Q1 0 2 1.2" />
+          <path class="wing right" d="M2 1.2Q3 0 4 1.4" />
+        </svg>
+      </template>
       <i
         v-if="fallingStar"
         :key="fallingStar.id"
@@ -238,6 +283,7 @@ onUnmounted(() => clearTimeout(waiting))
       </svg>
       <i class="sun-glow" />
       <i class="sun" />
+      <SceneSkyEvents :occasions="occasions" />
     </div>
 
     <svg class="hills" viewBox="0 0 1200 100" preserveAspectRatio="none">
@@ -312,10 +358,50 @@ onUnmounted(() => clearTimeout(waiting))
             rx="0.3"
           />
         </template>
+        <!-- On Kupala Night the fire burns twice the size, throwing sparks. -->
         <template v-if="piece.figure.fire && piece.isNight">
-          <circle class="fire-glow" cx="11.9" cy="5.4" r="4" fill="url(#scene-light)" />
-          <path class="fire" :d="piece.figure.fire" />
+          <circle
+            class="fire-glow"
+            cx="11.9"
+            cy="5.4"
+            :r="occasions.has('kupala') ? 9 : 4"
+            fill="url(#scene-light)"
+          />
+          <g
+            :transform="
+              occasions.has('kupala') ? 'translate(11.9 6.7) scale(2.1) translate(-11.9 -6.7)' : undefined
+            "
+          >
+            <path class="fire" :d="piece.figure.fire" />
+          </g>
+          <g v-if="occasions.has('kupala')" class="sparks">
+            <circle
+              v-for="([drift, rise], index) in SPARKS"
+              :key="index"
+              cx="11.9"
+              cy="2.5"
+              r="0.6"
+              :style="{
+                '--drift': `${drift}px`,
+                animationDuration: `${rise}s`,
+                animationDelay: `${-index * 0.27}s`,
+              }"
+            />
+          </g>
         </template>
+        <ScenePumpkin
+          v-if="occasions.has('halloween') && piece.figure.porch"
+          :at="piece.figure.porch"
+          :night="piece.isNight"
+        />
+        <!-- A stork in its nest on the ridge of the roof. -->
+        <g v-if="piece.nest" class="stork" :transform="`translate(${piece.nest[0]} ${piece.nest[1]})`">
+          <path class="stork-red" :d="STORK.legs" />
+          <ellipse class="nest" rx="2.4" ry="0.75" />
+          <path class="stork-white" :d="STORK.body" />
+          <path class="stork-black" :d="STORK.wing" />
+          <path class="stork-red" :d="STORK.beak" />
+        </g>
         <template v-if="look.snow">
           <path
             v-if="piece.figure.roof"
@@ -369,6 +455,7 @@ onUnmounted(() => clearTimeout(waiting))
           />
         </template>
       </svg>
+      <SceneEgg v-if="occasions.has('easter')" :style="eggStyle" />
     </div>
 
     <!-- What the season lets drift through the air. -->
@@ -408,6 +495,14 @@ onUnmounted(() => clearTimeout(waiting))
   border-radius: var(--radius);
   overflow: hidden;
   background: #0a0e2a;
+}
+
+/*
+ * April Fools' Day: the picture hangs upside down. Its hours run left to right as ever, so the
+ * numbers under it stay right.
+ */
+.scene.upside-down {
+  transform: scaleY(-1);
 }
 
 /* The night sky is nearly the dark page's own colour, so it needs an edge to stay a picture. */
@@ -622,6 +717,25 @@ onUnmounted(() => clearTimeout(waiting))
   }
 }
 
+/* Halloween's bats, where the birds fly, beating their wings fast. */
+.bat {
+  position: absolute;
+  overflow: visible;
+  fill: #2a2236;
+  animation: bob 1.9s ease-in-out var(--phase) infinite alternate;
+}
+
+.bat-wing {
+  transform-box: fill-box;
+  animation: bat-beat 0.22s ease-in-out infinite alternate;
+}
+
+@keyframes bat-beat {
+  to {
+    transform: scaleY(-0.6);
+  }
+}
+
 .moon-glow {
   position: absolute;
   left: 8.3%;
@@ -758,6 +872,43 @@ onUnmounted(() => clearTimeout(waiting))
   to {
     opacity: 0.7;
   }
+}
+
+.sparks circle {
+  fill: #ffd27a;
+  opacity: 0;
+  animation: spark ease-out infinite;
+}
+
+@keyframes spark {
+  15% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), -22px);
+  }
+}
+
+/* A stork: white, a black wing, red beak and legs, on a nest of twigs. */
+.nest {
+  fill: #5a4128;
+}
+
+.stork-white {
+  fill: #fbfaf5;
+}
+
+.stork-black {
+  fill: #1b1b22;
+}
+
+.stork-red {
+  fill: none;
+  stroke: #d9532b;
+  stroke-width: 0.32;
+  stroke-linecap: round;
 }
 
 /*
@@ -960,6 +1111,9 @@ onUnmounted(() => clearTimeout(waiting))
   .sails,
   .bird,
   .wing,
+  .bat,
+  .bat-wing,
+  .sparks circle,
   .star.twinkles,
   .fire,
   .fire-glow,
@@ -990,7 +1144,8 @@ onUnmounted(() => clearTimeout(waiting))
 /* Where the line has no room, only every other thing stands on the hill. */
 @media (max-width: 759px) {
   .figure.wide,
-  .flake:nth-child(2n) {
+  .flake:nth-child(2n),
+  .sparks circle:nth-child(n + 5) {
     display: none;
   }
 }

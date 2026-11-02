@@ -72,6 +72,10 @@ export interface Figure {
   lights?: { bulbs: readonly (readonly [number, number])[]; star: readonly [number, number] }
   /** Spots of spring blossom in its crown, `[x, y]`. */
   blossom?: readonly (readonly [number, number])[]
+  /** Where a pumpkin sits by the door on Halloween, `[x, y]` on the ground. */
+  porch?: readonly [number, number]
+  /** Where a stork can nest on the roof, `[x, y]`. */
+  nest?: readonly [number, number]
 }
 
 const HOUSE = 'M1 10V5L6 1l5 4v5ZM8 4.4V1.2h1.4v4.4Z'
@@ -114,6 +118,8 @@ export const FIGURES = {
     windows: [[3.2, 6, 2, 2]],
     smoke: 'M8.7 1c-.7-2 1.1-3 .3-4.8S10.4-6 10-7',
     roof: HOUSE_ROOF,
+    porch: [12.9, 9.1],
+    nest: [6, 1],
   },
   tallHouse: {
     viewBox: [0, 0, 9, 14],
@@ -252,7 +258,14 @@ export const SEASON_LOOKS: Record<Season, SeasonLook> = {
 export const groundOf = (look: SeasonLook) => look.ground ?? look.near
 
 /** Life on the near hill, by the hour it stands at. `wide` ones only show where the line has room. */
-export const LIFE: readonly { kind: FigureKind; hour: number; size?: number; wide?: true }[] = [
+export const LIFE: readonly {
+  kind: FigureKind
+  hour: number
+  size?: number
+  wide?: true
+  /** A stork nests here from April to August. */
+  stork?: true
+}[] = [
   { kind: 'pine', hour: 0.6 },
   { kind: 'fir', hour: 1.05, size: 1.1, wide: true },
   { kind: 'tallHouse', hour: 1.6 },
@@ -273,7 +286,7 @@ export const LIFE: readonly { kind: FigureKind; hour: number; size?: number; wid
   { kind: 'bush', hour: 12.45, wide: true },
   { kind: 'oak', hour: 13.2, size: 0.85, wide: true },
   { kind: 'oak', hour: 13.6, size: 1.1 },
-  { kind: 'cottage', hour: 14.7 },
+  { kind: 'cottage', hour: 14.7, stork: true },
   { kind: 'pine', hour: 15.5, size: 0.9, wide: true },
   { kind: 'fir', hour: 15.8, size: 1.2 },
   { kind: 'fence', hour: 16.8, wide: true },
@@ -311,3 +324,21 @@ export const CLOUDS: readonly (readonly [number, number, number])[] = [
   [34, 16, 1],
   [62.5, 10, 1.2],
 ]
+
+/** A bat, wings spread, drawn about its middle at (3, 1.3). Each wing beats on its own. */
+export const BAT = {
+  viewBox: '0 0 6 2.6',
+  body: 'M3 .8c.3 0 .5.3.5.7.4 0 .5-.4.5-.4l.2.6L3 2.4 1.8 1.7l.2-.6s.1.4.5.4c0-.4.2-.7.5-.7Z',
+  wings: [
+    'M2.4 1.3C1.8.4.9.3 0 .7c.5.3.7.8.6 1.3.6-.4 1.2-.3 1.6.1Z',
+    'M3.6 1.3C4.2.4 5.1.3 6 .7c-.5.3-.7.8-.6 1.3-.6-.4-1.2-.3-1.6.1Z',
+  ],
+} as const
+
+/** A white stork standing in its nest, drawn about the nest's middle at (0, 0). */
+export const STORK = {
+  legs: 'M-.3-1.6v1.4M.4-1.6v1.4',
+  beak: 'M2.9-5.2l1.7.5',
+  body: 'M-2-2.4c.6-.9 2.6-1.2 3.6-.5l.3-2.6c.1-.6.9-.7 1-.1l-.2 3.4c-.2 1-1.5 1.5-2.8 1.4-1 0-1.8-.5-2.2-1.6Z',
+  wing: 'M-2.4-2.5c1-.4 2.6-.3 3.3.4-.6.5-1.9.7-2.9.4Z',
+} as const

@@ -4,6 +4,7 @@ import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 import { groundOf, SEASON_LOOKS } from '@/config/scenery'
 import { ZONES, type Zone } from '@/config/zones'
 import { moonPhase } from '@/lib/moon'
+import { occasionsOf } from '@/lib/occasions'
 import { colourAt, inkReadsBetter, isFestive, seasonOf } from '@/lib/scenery'
 import {
   DAY_MINUTES,
@@ -33,6 +34,7 @@ const props = defineProps<{
 }>()
 
 const season = computed(() => seasonOf(props.date))
+const occasions = computed(() => occasionsOf(props.date))
 
 /** Each hour and half-hour dot, white or dark, whichever reads better on the ground under it. */
 const inked = computed(() => {
@@ -124,7 +126,12 @@ function onLineRelease() {
       @pointermove="onLineMove"
       @lostpointercapture="onLineRelease"
     >
-      <DayScene :season="season" :festive="isFestive(date)" :moon-phase="moonPhase(date)" />
+      <DayScene
+        :season="season"
+        :festive="isFestive(date)"
+        :moon-phase="moonPhase(date)"
+        :occasions="occasions"
+      />
       <div class="hours" aria-hidden="true">
         <span
           v-for="hour in HOURS"
