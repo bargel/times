@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
+
 import {
   BIRDS,
   CLOUDS,
@@ -13,6 +15,7 @@ import {
   type Figure,
 } from '@/config/scenery'
 import { colourAt, ridgePath, ridgeTop } from '@/lib/scenery'
+import { nextShootingStar, nextShootingStarDelay, type ShootingStar } from '@/lib/shootingStar'
 
 const HILLS = [
   { id: 'far', stops: FAR_HILLS, path: ridgePath(RIDGES.far) },
@@ -44,6 +47,22 @@ const life = LIFE.map(({ kind, hour, size = 1, wide }) => {
 })
 
 const groundColours = `linear-gradient(90deg, ${NEAR_HILL.map(([at, colour]) => `${colour} ${at * 100}%`).join(', ')})`
+
+/** Now and then a star falls in the night sky: never under reduced motion, never on a hidden tab. */
+const fallingStar = ref<ShootingStar & { id: number }>()
+let fallen = 0
+let waiting: ReturnType<typeof setTimeout> | undefined
+const stillMotion = matchMedia('(prefers-reduced-motion: reduce)')
+
+function waitForStar() {
+  waiting = setTimeout(() => {
+    if (!stillMotion.matches && !document.hidden) fallingStar.value = { ...nextShootingStar(), id: ++fallen }
+    waitForStar()
+  }, nextShootingStarDelay())
+}
+
+onMounted(waitForStar)
+onUnmounted(() => clearTimeout(waiting))
 </script>
 
 <template>
@@ -75,6 +94,20 @@ const groundColours = `linear-gradient(90deg, ${NEAR_HILL.map(([at, colour]) => 
       >
         <path d="M0 1.4Q1 0 2 1.2 3 0 4 1.4" />
       </svg>
+      <i
+        v-if="fallingStar"
+        :key="fallingStar.id"
+        class="falling-star"
+        :style="{
+          left: `${fallingStar.x}%`,
+          top: `${fallingStar.y}%`,
+          '--angle': `${fallingStar.angle}deg`,
+          '--length': `calc(${fallingStar.length} * var(--unit))`,
+          '--distance': `calc(${fallingStar.distance} * var(--unit))`,
+          '--duration': `${fallingStar.duration}ms`,
+        }"
+        @animationend="fallingStar = undefined"
+      />
       <i class="moon-glow" />
       <svg class="moon" viewBox="0 0 24 24">
         <path d="M15 2a10 10 0 1 0 7.4 14.6A9 9 0 0 1 15 2Z" />
@@ -250,6 +283,68 @@ const groundColours = `linear-gradient(90deg, ${NEAR_HILL.map(([at, colour]) => 
 
 .star:nth-child(3n) {
   opacity: 0.5;
+}
+
+/*
+ * A falling star. The element only flies, in a straight line at one speed; the streak inside
+ * brightens, grows its tail and fades on its own, so nothing about it can stall the flight.
+ */
+.falling-star {
+  position: absolute;
+  width: var(--length);
+  height: 1.2px;
+  margin-top: -0.6px;
+  margin-left: calc(var(--length) * -1);
+  transform-origin: 100% 50%;
+  transform: rotate(var(--angle));
+  animation: fly var(--duration) linear forwards;
+}
+
+.falling-star::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1px;
+  background: linear-gradient(90deg, rgb(255 255 255 / 0), rgb(255 255 255 / 0.7) 70%, #fff);
+  transform-origin: 100% 50%;
+  opacity: 0;
+  animation: glint var(--duration) linear forwards;
+}
+
+@keyframes fly {
+  to {
+    transform: rotate(var(--angle)) translateX(var(--distance));
+  }
+}
+
+@keyframes glint {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.25);
+  }
+
+  15% {
+    opacity: 0.95;
+  }
+
+  45% {
+    transform: scaleX(1);
+  }
+
+  60% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scaleX(0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .falling-star {
+    display: none;
+  }
 }
 
 .cloud,

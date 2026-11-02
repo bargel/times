@@ -46,6 +46,11 @@ function crowdsEnd(hour: number): boolean {
   return (hour === 0 || hour === 23) && !touchedSteps.value.has(hour * 2 + 1)
 }
 
+/** And when a flag stands on that dot, 00 or 24 makes way for it. */
+function yieldsEnd(hour: number): boolean {
+  return (hour === 0 && touchedSteps.value.has(1)) || (hour === 24 && touchedSteps.value.has(47))
+}
+
 const line = useTemplateRef('line')
 
 /** A flag this close to 24:00 flies on the pole's other side, so it stays inside the picture's width. */
@@ -111,6 +116,7 @@ function onLineRelease() {
             touched: touchedHours.has(hour),
             first: hour === 0,
             last: hour === 24,
+            yields: yieldsEnd(hour),
           }"
           :style="{ left: `${(hour / 24) * 100}%` }"
         >
@@ -193,6 +199,10 @@ function onLineRelease() {
   transform: translateX(-100%);
 }
 
+.hour.yields {
+  visibility: hidden;
+}
+
 .touched {
   color: #fff;
   font-weight: 700;
@@ -250,6 +260,10 @@ function onLineRelease() {
 
   .half-hour {
     display: none;
+  }
+
+  .hour.yields {
+    visibility: visible;
   }
 
   .hour {
