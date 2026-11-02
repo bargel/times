@@ -16,9 +16,6 @@
   --radius: 8px;
   --control-height: 44px;
 
-  /* Room past 24:00 so a flag at the very end still fits on screen. */
-  --line-tail: 32px;
-
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 
 import { ZONES, type Zone } from '@/config/zones'
 import { DAY_MINUTES, minuteOfDay, SLOT_MINUTES, STEPS_ON_LINE, wallClockAt } from '@/lib/time'
@@ -41,7 +41,27 @@ const touchedHours = computed(
   () => new Set([...touchedSteps.value].filter((step) => step % 2 === 0).map((step) => step / 2)),
 )
 
+/** A half-hour dot right by 00 or 24 would crowd the number pulled inside the picture's edge. */
+function crowdsEnd(hour: number): boolean {
+  return (hour === 0 || hour === 23) && !touchedSteps.value.has(hour * 2 + 1)
+}
+
 const line = useTemplateRef('line')
+
+/** A flag this close to 24:00 flies on the pole's other side, so it stays inside the picture's width. */
+const FLAG_ROOM = 32
+const lineWidth = ref(0)
+const resizes = new ResizeObserver(([entry]) => {
+  lineWidth.value = entry!.contentRect.width
+})
+onMounted(() => {
+  lineWidth.value = line.value!.clientWidth
+  resizes.observe(line.value!)
+})
+onUnmounted(() => resizes.disconnect())
+
+const flies = (position: number) => (1 - position) * lineWidth.value < FLAG_ROOM
+
 const lineHeld = ref(false)
 const poleHeld = ref(false)
 
@@ -86,7 +106,12 @@ function onLineRelease() {
           v-for="hour in HOURS"
           :key="hour"
           class="hour"
-          :class="{ sixth: hour % 6 === 0, touched: touchedHours.has(hour) }"
+          :class="{
+            sixth: hour % 6 === 0,
+            touched: touchedHours.has(hour),
+            first: hour === 0,
+            last: hour === 24,
+          }"
           :style="{ left: `${(hour / 24) * 100}%` }"
         >
           {{ String(hour).padStart(2, '0') }}
@@ -95,7 +120,7 @@ function onLineRelease() {
           v-for="hour in HALF_HOURS"
           :key="`half-${hour}`"
           class="half-hour"
-          :class="{ touched: touchedSteps.has(hour * 2 + 1) }"
+          :class="{ touched: touchedSteps.has(hour * 2 + 1), crowds: crowdsEnd(hour) }"
           :style="{ left: `${((hour + 0.5) / 24) * 100}%` }"
         />
       </div>
@@ -110,6 +135,7 @@ function onLineRelease() {
         :position="position"
         :last-step="zone === homeZone ? STEPS_ON_LINE : STEPS_ON_LINE - 1"
         :line-held="lineHeld"
+        :flies-back="flies(position)"
         @drag="dragZone(zone, $event)"
         @set-minute="emit('move', zone.timeZone, $event)"
         @held="poleHeld = $event"
@@ -119,12 +145,17 @@ function onLineRelease() {
 </template>
 
 <style scoped>
+/* The picture's heights: its sky, and the strip of ground at its foot that the hours stand on. */
 .line {
-  margin-right: var(--line-tail);
+  --sky-height: clamp(52px, 6.4vw, 72px);
+  --ground-height: 22px;
+  --scene-height: calc(var(--sky-height) + var(--ground-height));
+
   user-select: none;
 }
 
 .surface {
+  position: relative;
   cursor: pointer;
   touch-action: none;
 }
@@ -133,54 +164,73 @@ function onLineRelease() {
   cursor: grabbing;
 }
 
+/* The picture is the ruler: its ends are 00 and 24. */
 .hours {
-  position: relative;
-  height: 20px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--ground-height);
 }
 
 .hour {
   position: absolute;
-  top: 3px;
+  top: 2px;
   transform: translateX(-50%);
   font-size: 12px;
   line-height: 17px;
-  color: var(--ink-soft);
+  color: rgb(255 255 255 / 0.82);
+}
+
+/* Inside the picture's ends rather than cut by them. */
+.hour.first {
+  margin-left: 6px;
+  transform: none;
+}
+
+.hour.last {
+  margin-left: -6px;
+  transform: translateX(-100%);
 }
 
 .touched {
-  color: var(--ink);
+  color: #fff;
   font-weight: 700;
 }
 
 /* Marks the half hour, so a pole between two numbers still touches something. */
 .half-hour {
   position: absolute;
-  top: 10px;
+  top: 9.5px;
   width: 3px;
   height: 3px;
   margin-left: -1.5px;
   border-radius: 50%;
-  background: var(--ink-soft);
+  background: rgb(255 255 255 / 0.55);
+}
+
+.half-hour.crowds {
+  display: none;
 }
 
 .half-hour.touched {
-  top: 9px;
+  top: 8.5px;
   width: 5px;
   height: 5px;
   margin-left: -2.5px;
-  background: var(--ink);
+  background: #fff;
 }
 
-/* Carries the pole, which starts under the numbers, up to the dot level with them. */
+/* Carries the pole, which starts under the picture, up to the dot level with the numbers. */
 .half-hour.touched::after {
   content: '';
   position: absolute;
   top: 100%;
   left: 50%;
   width: 2px;
-  height: 6px;
+  height: calc(var(--ground-height) - 13.5px);
   margin-left: -1px;
-  background: var(--ink);
+  background: #fff;
 }
 
 /* Past the lowest flag and its touch area, so a tap on the buttons below can't catch it. */
@@ -194,8 +244,8 @@ function onLineRelease() {
  * number and a longer tick every six. The big times above say the exact time, so this only places it.
  */
 @media (max-width: 759px) {
-  .hours {
-    height: 25px;
+  .line {
+    --ground-height: 24px;
   }
 
   .half-hour {
@@ -203,8 +253,9 @@ function onLineRelease() {
   }
 
   .hour {
+    top: 7px;
     font-weight: 500;
-    color: var(--ink-soft);
+    line-height: 15px;
   }
 
   .hour:not(.sixth) {
@@ -212,37 +263,36 @@ function onLineRelease() {
     font-size: 0;
   }
 
-  .hour.sixth.touched {
-    font-weight: 700;
-    color: var(--ink);
-  }
-
+  /* The ticks hang from the top of the ground; the picture's own edges mark 00 and 24. */
   .hour::after {
     content: '';
     position: absolute;
-    top: 17px;
+    top: -7px;
     left: 50%;
     width: 1px;
-    height: 5px;
+    height: 4px;
     margin-left: -0.5px;
-    background: color-mix(in srgb, var(--ink-soft) 65%, transparent);
+    background: rgb(255 255 255 / 0.45);
   }
 
   .hour.sixth::after {
-    top: 15px;
     width: 1.5px;
-    height: 7px;
+    height: 6px;
     margin-left: -0.75px;
-    background: var(--ink-soft);
+    background: rgb(255 255 255 / 0.8);
   }
 
-  /* The poles start at the ticks. */
-  .poles {
-    margin-top: -5px;
+  .hour.first::after,
+  .hour.last::after {
+    display: none;
   }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
+  .line {
+    --sky-height: 40px;
+  }
+
   .poles {
     height: 86px;
   }

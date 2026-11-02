@@ -1,72 +1,176 @@
 <script setup lang="ts">
-// Horizontal positions are percent of the 24 hours; the sky runs midnight to midnight.
-const STARS = [
-  [1.5, 18], [4.5, 44], [7.5, 14], [10, 34], [12.5, 56], [15, 20], [17, 42],
-  [88, 40], [90.5, 16], [93, 50], [95.5, 26], [98.5, 44],
-] as const
+import {
+  BIRDS,
+  CLOUDS,
+  FAR_HILLS,
+  FIGURES,
+  isNightAt,
+  LIFE,
+  MID_HILLS,
+  NEAR_HILL,
+  RIDGES,
+  STARS,
+  type Figure,
+} from '@/config/scenery'
+import { colourAt, ridgePath, ridgeTop } from '@/lib/scenery'
+
+const HILLS = [
+  { id: 'far', stops: FAR_HILLS, path: ridgePath(RIDGES.far) },
+  { id: 'mid', stops: MID_HILLS, path: ridgePath(RIDGES.mid) },
+  { id: 'near', stops: NEAR_HILL, path: ridgePath(RIDGES.near) },
+]
+
+const SAIL_TURNS = [0, 90, 180, 270]
+
+/** Each figure stands on the near hill where it is, in the hill's own colour there. */
+const life = LIFE.map(({ kind, hour, size = 1, wide }) => {
+  const place = hour / 24
+  const figure: Figure = FIGURES[kind]
+  const [x, y, width, height] = figure.viewBox
+  return {
+    key: `${kind}-${hour}`,
+    figure,
+    wide,
+    isNight: isNightAt(place),
+    colour: colourAt(NEAR_HILL, place),
+    viewBox: `${x} ${y} ${width} ${height}`,
+    style: {
+      left: `${place * 100}%`,
+      top: `${ridgeTop(RIDGES.near, place)}%`,
+      width: `calc(${width * size} * var(--unit))`,
+      height: `calc(${height * size} * var(--unit))`,
+    },
+  }
+})
+
+const groundColours = `linear-gradient(90deg, ${NEAR_HILL.map(([at, colour]) => `${colour} ${at * 100}%`).join(', ')})`
 </script>
 
 <template>
   <div class="scene" aria-hidden="true">
     <div class="sky">
-      <i v-for="[x, y] in STARS" :key="x" class="star" :style="{ left: `${x}%`, top: `${y}%` }" />
+      <i
+        v-for="[x, y, size] in STARS"
+        :key="`${x}-${y}`"
+        class="star"
+        :style="{ left: `${x}%`, top: `${y}%`, width: `${size}px`, height: `${size}px` }"
+      />
+      <svg
+        v-for="[x, y, size] in CLOUDS"
+        :key="`cloud-${x}`"
+        class="cloud"
+        viewBox="0 0 19 6"
+        :style="{ left: `${x}%`, top: `${y}%`, width: `calc(${19 * size} * var(--unit))` }"
+      >
+        <path
+          d="M1 6C-.4 6 0 3.6 1.8 3.8 2.2 1.8 4.6 1.4 5.8 2.8 6.6.4 10 0 11.4 2c1.2-1.2 3.8-.6 4.2 1.4 2-.4 3 1.6 1.8 2.6Z"
+        />
+      </svg>
+      <svg
+        v-for="[x, y, size] in BIRDS"
+        :key="`bird-${x}`"
+        class="bird"
+        viewBox="0 0 4 1.6"
+        :style="{ left: `${x}%`, top: `${y}%`, width: `calc(${5 * size} * var(--unit))` }"
+      >
+        <path d="M0 1.4Q1 0 2 1.2 3 0 4 1.4" />
+      </svg>
+      <i class="moon-glow" />
       <svg class="moon" viewBox="0 0 24 24">
         <path d="M15 2a10 10 0 1 0 7.4 14.6A9 9 0 0 1 15 2Z" />
       </svg>
+      <i class="sun-glow" />
       <i class="sun" />
     </div>
 
     <svg class="hills" viewBox="0 0 1200 100" preserveAspectRatio="none">
       <defs>
-        <linearGradient id="hills-far">
-          <stop offset="0" stop-color="#141a42" />
-          <stop offset="0.2" stop-color="#1c2452" />
-          <stop offset="0.28" stop-color="#8a6f66" />
-          <stop offset="0.38" stop-color="#6fa596" />
-          <stop offset="0.68" stop-color="#6fa596" />
-          <stop offset="0.78" stop-color="#a0694f" />
-          <stop offset="0.86" stop-color="#1c2452" />
-          <stop offset="1" stop-color="#141a42" />
+        <linearGradient v-for="hill in HILLS" :id="`scene-${hill.id}`" :key="hill.id">
+          <stop
+            v-for="[at, colour] in hill.stops"
+            :key="at"
+            :offset="at"
+            :stop-color="colour"
+          />
         </linearGradient>
-        <linearGradient id="hills-near">
-          <stop offset="0" stop-color="#090d24" />
-          <stop offset="0.2" stop-color="#0f1433" />
-          <stop offset="0.28" stop-color="#4f4140" />
-          <stop offset="0.38" stop-color="#3a7564" />
-          <stop offset="0.68" stop-color="#3a7564" />
-          <stop offset="0.78" stop-color="#5e3b30" />
-          <stop offset="0.86" stop-color="#0f1433" />
-          <stop offset="1" stop-color="#090d24" />
-        </linearGradient>
+        <radialGradient id="scene-light">
+          <stop offset="0" stop-color="#ffc56a" stop-opacity="0.55" />
+          <stop offset="1" stop-color="#ffc56a" stop-opacity="0" />
+        </radialGradient>
       </defs>
-      <path
-        fill="url(#hills-far)"
-        d="M0 46C110 12 230 18 350 44S560 74 700 38 960 8 1200 46V100H0Z"
-      />
-      <path
-        fill="url(#hills-near)"
-        d="M0 72C130 44 290 50 430 70S700 92 840 66 1050 48 1200 72V100H0Z"
-      />
+      <path v-for="hill in HILLS" :key="hill.id" :fill="`url(#scene-${hill.id})`" :d="hill.path" />
     </svg>
 
-    <!-- The night carries on past 24:00, under the room kept for the last flag. -->
-    <svg class="tail" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <rect y="46" width="100" height="54" fill="#141a42" />
-      <rect y="72" width="100" height="28" fill="#090d24" />
-    </svg>
+    <div class="life">
+      <svg
+        v-for="piece in life"
+        :key="piece.key"
+        class="figure"
+        :class="{ wide: piece.wide }"
+        :viewBox="piece.viewBox"
+        :style="piece.style"
+      >
+        <path v-if="piece.figure.smoke" class="smoke" :d="piece.figure.smoke" />
+        <path :fill="piece.colour" :d="piece.figure.body" />
+        <g
+          v-if="piece.figure.sails"
+          class="sails"
+          :style="{
+            transformOrigin: `${piece.figure.sails.centre[0]}px ${piece.figure.sails.centre[1]}px`,
+          }"
+        >
+          <path
+            v-for="turn in SAIL_TURNS"
+            :key="turn"
+            :fill="piece.colour"
+            :d="piece.figure.sails.path"
+            :transform="`rotate(${turn} ${piece.figure.sails.centre[0]} ${piece.figure.sails.centre[1]})`"
+          />
+        </g>
+        <template v-for="[x, y, width, height] in piece.figure.windows ?? []" :key="`${x}-${y}`">
+          <circle
+            v-if="piece.isNight"
+            :cx="x + width / 2"
+            :cy="y + height / 2"
+            r="3.5"
+            fill="url(#scene-light)"
+          />
+          <rect
+            class="window"
+            :class="{ lit: piece.isNight }"
+            :x="x"
+            :y="y"
+            :width="width"
+            :height="height"
+            rx="0.3"
+          />
+        </template>
+        <template v-if="piece.figure.fire && piece.isNight">
+          <circle cx="11.9" cy="5.4" r="4" fill="url(#scene-light)" />
+          <path class="fire" :d="piece.figure.fire" />
+        </template>
+      </svg>
+    </div>
+
+    <!-- The near ground, flat and dark enough to carry the hours. -->
+    <div class="ground" :style="{ background: groundColours }" />
   </div>
 </template>
 
 <style scoped>
+/*
+ * The line sets the heights: the sky over the hills, and the strip of ground the hours stand on.
+ * The small things are drawn in units a little over a pixel on the desktop's 72px sky, and scale
+ * with it, so they stay readable on a phone.
+ */
 .scene {
-  --hours: calc(100% - var(--line-tail));
+  --unit: calc(var(--sky-height) / 60);
 
   position: relative;
-  height: clamp(52px, 6.4vw, 72px);
-  margin-right: calc(var(--line-tail) * -1);
+  height: var(--scene-height);
   border-radius: var(--radius);
   overflow: hidden;
-  background: #0c1130;
+  background: #0a0e2a;
 }
 
 /* The night sky is nearly the dark page's own colour, so it needs an edge to stay a picture. */
@@ -81,52 +185,106 @@ const STARS = [
   }
 }
 
-.sky,
-.hills {
+/* The colours by the horizon, warm where the sun rises and sets. */
+.sky {
   position: absolute;
+  top: 0;
+  right: 0;
+  bottom: var(--ground-height);
   left: 0;
-  width: var(--hours);
+  background:
+    radial-gradient(9% 75% at 27% 100%, rgb(255 178 120 / 0.8), transparent),
+    radial-gradient(9% 75% at 76.5% 100%, rgb(255 150 100 / 0.8), transparent),
+    linear-gradient(
+      90deg,
+      #0a0e2a 0%,
+      #161f52 17%,
+      #3e3a78 21.5%,
+      #9a5e8c 24.5%,
+      #e88a7a 27%,
+      #fbc58f 30%,
+      #f6e4c4 34.5%,
+      #b9def0 40%,
+      #7cc0ec 50%,
+      #b9def0 62%,
+      #f6e0bc 69%,
+      #fbbf86 73.5%,
+      #ec8068 76.5%,
+      #a5577e 79.5%,
+      #4a3e7c 83%,
+      #182155 88%,
+      #0a0e2a 100%
+    );
 }
 
-.sky {
-  top: 0;
-  bottom: 0;
+/* Overhead the sky is deeper, fading down into the horizon's colours. */
+.sky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     90deg,
-    #0c1130 0%,
-    #1a2358 18%,
-    #5f4d7f 23%,
-    #d98a78 26.5%,
-    #f9d2a0 30%,
-    #cde6f0 37%,
-    #86c9ef 50%,
-    #cde6f0 66%,
-    #fbd6a0 73%,
-    #ea906a 78%,
-    #5f4d7f 83%,
-    #1a2358 89%,
-    #0c1130 100%
+    #060920 0%,
+    #0b1140 18%,
+    #23276a 23%,
+    #4c4790 27%,
+    #4f86cc 32%,
+    #3784d0 40%,
+    #2f7fcf 50%,
+    #3784d0 60%,
+    #4f86cc 69%,
+    #55468a 75%,
+    #33296c 80%,
+    #0e1346 86%,
+    #060920 100%
   );
+  mask-image: linear-gradient(180deg, #000, transparent 78%);
 }
 
 .star {
   position: absolute;
-  width: 2px;
-  height: 2px;
   border-radius: 50%;
   background: #fff;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .star:nth-child(3n) {
-  opacity: 0.45;
+  opacity: 0.5;
+}
+
+.cloud,
+.bird {
+  position: absolute;
+  overflow: visible;
+}
+
+.cloud {
+  fill: rgb(255 255 255 / 0.42);
+}
+
+.bird {
+  fill: none;
+  stroke: rgb(20 28 60 / 0.6);
+  stroke-width: 0.45;
+  stroke-linecap: round;
+}
+
+.moon-glow {
+  position: absolute;
+  left: 8.3%;
+  top: 34%;
+  height: 90%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(244 239 216 / 0.22), transparent);
+  transform: translate(-50%, -50%);
 }
 
 .moon {
   position: absolute;
   left: 8.3%;
-  top: 12%;
-  height: 46%;
+  top: 14%;
+  height: 40%;
   aspect-ratio: 1;
   fill: #f4efd8;
   transform: translateX(-50%);
@@ -135,32 +293,100 @@ const STARS = [
 .sun {
   position: absolute;
   left: 50%;
-  top: 10%;
-  height: 50%;
+  top: 15%;
+  height: 42%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #fff4c2;
+  background: #fffbe6;
   transform: translateX(-50%);
 }
 
+/* The sun's light around it, behind the disc. */
+.sun-glow {
+  position: absolute;
+  left: 50%;
+  top: 36%;
+  height: 109%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    closest-side,
+    rgb(255 250 220 / 0.75),
+    rgb(255 246 200 / 0.25) 55%,
+    transparent
+  );
+}
+
+/* A pixel into the ground, so no sky shows between them. The life on the hill shares the box. */
+.hills,
+.life {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  bottom: calc(var(--ground-height) - 1px);
+  height: calc((100% - var(--ground-height)) * 0.45);
+}
+
 .hills {
-  bottom: 0;
-  height: 42%;
   display: block;
 }
 
-.tail {
+/* Standing on the hill, a little into it. */
+.figure {
+  position: absolute;
+  overflow: visible;
+  transform: translate(-50%, calc(-100% + 0.5px));
+}
+
+.window {
+  fill: rgb(8 20 24 / 0.35);
+}
+
+.window.lit {
+  fill: #ffd27a;
+}
+
+.fire {
+  fill: #ffb24d;
+}
+
+.smoke {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.3);
+  stroke-width: 0.7;
+  stroke-linecap: round;
+}
+
+.sails {
+  transform-box: view-box;
+  animation: turn 30s linear infinite;
+}
+
+@keyframes turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sails {
+    animation: none;
+  }
+}
+
+/* Where the line has no room, only every other thing stands on the hill. */
+@media (max-width: 759px) {
+  .figure.wide {
+    display: none;
+  }
+}
+
+.ground {
   position: absolute;
   right: 0;
   bottom: 0;
-  width: var(--line-tail);
-  height: 42%;
-  display: block;
-}
-
-@media (orientation: landscape) and (max-height: 500px) {
-  .scene {
-    height: 40px;
-  }
+  left: 0;
+  height: var(--ground-height);
 }
 </style>

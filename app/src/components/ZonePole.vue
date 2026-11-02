@@ -16,6 +16,8 @@ const props = defineProps<{
   lastStep: number
   /** The line is being dragged, so this pole should follow without easing. */
   lineHeld: boolean
+  /** Too near the line's end for the flag: it flies on the pole's left. */
+  fliesBack: boolean
 }>()
 
 const emit = defineEmits<{
@@ -90,7 +92,12 @@ watch(
 <template>
   <div
     class="pole"
-    :class="{ 'is-held': held, glides, 'lane-low': zone.lane === 1 }"
+    :class="{
+      'is-held': held,
+      glides,
+      'lane-low': zone.lane === 1,
+      'flies-back': fliesBack,
+    }"
     :style="{ left: `${position * 100}%` }"
   >
     <input
@@ -167,6 +174,16 @@ watch(
   transform: scale(1.12);
   transform-origin: left center;
   box-shadow: 0 3px 8px rgb(9 13 36 / 0.35);
+}
+
+.flies-back .handle {
+  right: 100%;
+  left: auto;
+  border-radius: 5px 0 0 5px;
+}
+
+.flies-back.is-held .handle {
+  transform-origin: right center;
 }
 
 input:focus-visible + .handle {
