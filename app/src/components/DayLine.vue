@@ -41,19 +41,18 @@ const touchedHours = computed(
   () => new Set([...touchedSteps.value].filter((step) => step % 2 === 0).map((step) => step / 2)),
 )
 
-/** A half-hour dot right by 00 or 24 would crowd the number pulled inside the picture's edge. */
-function crowdsEnd(hour: number): boolean {
-  return (hour === 0 || hour === 23) && !touchedSteps.value.has(hour * 2 + 1)
-}
+/**
+ * The day starts and ends this far inside the picture's edges, so 00 and 24 sit centred on their
+ * hours like every other number, with a half-hour dot on either side of each.
+ */
+const INSET = 12
 
-/** And when a flag stands on that dot, 00 or 24 makes way for it. */
-function yieldsEnd(hour: number): boolean {
-  return (hour === 0 && touchedSteps.value.has(1)) || (hour === 24 && touchedSteps.value.has(47))
-}
+/** Where an hour, or a fraction of the day, stands along the picture. */
+const along = (fraction: number) => `calc(${INSET}px + (100% - ${2 * INSET}px) * ${fraction})`
 
 const line = useTemplateRef('line')
 
-/** A flag this close to 24:00 flies on the pole's other side, so it stays inside the picture's width. */
+/** A flag this close to the picture's right edge flies on the pole's other side, so it stays inside. */
 const FLAG_ROOM = 32
 const lineWidth = ref(0)
 const resizes = new ResizeObserver(([entry]) => {
@@ -65,18 +64,18 @@ onMounted(() => {
 })
 onUnmounted(() => resizes.disconnect())
 
-const flies = (position: number) => (1 - position) * lineWidth.value < FLAG_ROOM
+const flies = (position: number) => (1 - position) * (lineWidth.value - 2 * INSET) + INSET < FLAG_ROOM
 
 const lineHeld = ref(false)
 const poleHeld = ref(false)
 
 function dragZone(zone: Zone, clientX: number) {
   const box = line.value!.getBoundingClientRect()
-  const along = Math.min(Math.max((clientX - box.left) / box.width, 0), 1)
+  const share = Math.min(Math.max((clientX - box.left - INSET) / (box.width - 2 * INSET), 0), 1)
   // Only the home zone's day ends at 24:00. Another zone's flag stops at 23:30, under the finger,
   // because its 00:00 is at the start of the line.
   const lastStep = zone === props.homeZone ? STEPS_ON_LINE : STEPS_ON_LINE - 1
-  const step = Math.min(Math.round(along * STEPS_ON_LINE), lastStep)
+  const step = Math.min(Math.round(share * STEPS_ON_LINE), lastStep)
   emit('move', zone.timeZone, step * SLOT_MINUTES)
 }
 
@@ -111,14 +110,8 @@ function onLineRelease() {
           v-for="hour in HOURS"
           :key="hour"
           class="hour"
-          :class="{
-            sixth: hour % 6 === 0,
-            touched: touchedHours.has(hour),
-            first: hour === 0,
-            last: hour === 24,
-            yields: yieldsEnd(hour),
-          }"
-          :style="{ left: `${(hour / 24) * 100}%` }"
+          :class="{ sixth: hour % 6 === 0, touched: touchedHours.has(hour) }"
+          :style="{ left: along(hour / 24) }"
         >
           {{ String(hour).padStart(2, '0') }}
         </span>
@@ -126,13 +119,13 @@ function onLineRelease() {
           v-for="hour in HALF_HOURS"
           :key="`half-${hour}`"
           class="half-hour"
-          :class="{ touched: touchedSteps.has(hour * 2 + 1), crowds: crowdsEnd(hour) }"
-          :style="{ left: `${((hour + 0.5) / 24) * 100}%` }"
+          :class="{ touched: touchedSteps.has(hour * 2 + 1) }"
+          :style="{ left: along((hour + 0.5) / 24) }"
         />
       </div>
     </div>
 
-    <div class="poles">
+    <div class="poles" :style="{ marginInline: `${INSET}px` }">
       <ZonePole
         v-for="{ zone, position } in poles"
         :key="zone.id"
@@ -170,7 +163,7 @@ function onLineRelease() {
   cursor: grabbing;
 }
 
-/* The picture is the ruler: its ends are 00 and 24. */
+/* The picture is the ruler; a little night carries on past 00 and 24. */
 .hours {
   position: absolute;
   right: 0;
@@ -188,21 +181,6 @@ function onLineRelease() {
   color: rgb(255 255 255 / 0.82);
 }
 
-/* Inside the picture's ends rather than cut by them. */
-.hour.first {
-  margin-left: 6px;
-  transform: none;
-}
-
-.hour.last {
-  margin-left: -6px;
-  transform: translateX(-100%);
-}
-
-.hour.yields {
-  visibility: hidden;
-}
-
 .touched {
   color: #fff;
   font-weight: 700;
@@ -217,10 +195,6 @@ function onLineRelease() {
   margin-left: -1.5px;
   border-radius: 50%;
   background: rgb(255 255 255 / 0.55);
-}
-
-.half-hour.crowds {
-  display: none;
 }
 
 .half-hour.touched {
@@ -262,10 +236,6 @@ function onLineRelease() {
     display: none;
   }
 
-  .hour.yields {
-    visibility: visible;
-  }
-
   .hour {
     top: 7px;
     font-weight: 500;
@@ -277,7 +247,7 @@ function onLineRelease() {
     font-size: 0;
   }
 
-  /* The ticks hang from the top of the ground; the picture's own edges mark 00 and 24. */
+  /* The ticks hang from the top of the ground. */
   .hour::after {
     content: '';
     position: absolute;
@@ -294,11 +264,6 @@ function onLineRelease() {
     height: 6px;
     margin-left: -0.75px;
     background: rgb(255 255 255 / 0.8);
-  }
-
-  .hour.first::after,
-  .hour.last::after {
-    display: none;
   }
 }
 
