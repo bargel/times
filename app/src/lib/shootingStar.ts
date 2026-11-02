@@ -28,7 +28,7 @@ export function nextShootingStar(random: () => number = Math.random): ShootingSt
   }
 }
 
-/** Rare enough to be a small surprise rather than something moving in the corner of the eye. */
+/** Often enough to catch in a short visit, rare enough to stay a small surprise. */
 export function nextShootingStarDelay(random: () => number = Math.random): number {
-  return between(random, 15_000, 40_000)
+  return between(random, 5_000, 12_000)
 }

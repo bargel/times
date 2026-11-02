@@ -176,13 +176,11 @@ watch(
   box-shadow: 0 3px 8px rgb(9 13 36 / 0.35);
 }
 
+/* Grows away from its pole, whichever of the pole or the whole line is held. */
 .flies-back .handle {
   right: 100%;
   left: auto;
   border-radius: 5px 0 0 5px;
-}
-
-.flies-back.is-held .handle {
   transform-origin: right center;
 }
 

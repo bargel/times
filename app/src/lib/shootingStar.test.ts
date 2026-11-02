@@ -32,8 +32,8 @@ describe('nextShootingStar', () => {
 })
 
 describe('nextShootingStarDelay', () => {
-  it('waits between 15 and 40 seconds', () => {
-    expect(nextShootingStarDelay(always(0))).toBe(15_000)
-    expect(nextShootingStarDelay(always(1))).toBe(40_000)
+  it('waits between 5 and 12 seconds', () => {
+    expect(nextShootingStarDelay(always(0))).toBe(5_000)
+    expect(nextShootingStarDelay(always(1))).toBe(12_000)
   })
 })
