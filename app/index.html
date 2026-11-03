@@ -9,6 +9,22 @@
     <meta name="description" content="One moment in Vancouver, Kyiv and Warsaw, ready to paste into Discord." />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f7fb" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c1029" />
+    <script>
+      // Before the first paint, so a page kept in day or night never shows the other one for a
+      // moment. Kept in step with src/lib/theme.ts.
+      try {
+        var theme = localStorage.getItem('pluacan-theme')
+        if (theme === 'day' || theme === 'night') {
+          document.documentElement.dataset.theme = theme
+          var bar = theme === 'day' ? '#f3f7fb' : '#0c1029'
+          document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+            meta.content = bar
+          })
+        }
+      } catch (blocked) {
+        // Storage off limits: the page follows the device.
+      }
+    </script>
     <title>PLUACAN</title>
   </head>
   <body>

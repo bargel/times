@@ -20,14 +20,8 @@ const FLAGS: Record<ZoneId, string> = { canada, ukraine, poland }
   flex: none;
   object-fit: cover;
   border-radius: 2px;
-  /* Poland's white half has to stay visible on a pale ground. */
-  outline: 1px solid color-mix(in srgb, var(--ink) 24%, transparent);
+  /* Poland's white half has to stay visible on a pale ground; by night a faint edge is enough. */
+  outline: 1px solid var(--flag-edge);
   outline-offset: -1px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .flag {
-    outline-color: color-mix(in srgb, var(--ink) 12%, transparent);
-  }
 }
 </style>

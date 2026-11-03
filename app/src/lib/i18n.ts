@@ -1,5 +1,6 @@
 import type { ZoneId } from '@/config/zones'
 
+import type { Theme } from './theme'
 import type { IsoDate } from './time'
 import type { YearMonth } from './calendar'
 
@@ -19,6 +20,9 @@ interface Messages {
   previousMonth: string
   nextMonth: string
   calendar: string
+  /** The theme switch, and each of its buttons. */
+  theme: string
+  themes: Record<Theme, string>
   timeIn: (city: string) => string
   /** Monday first, as the calendar's page is. */
   weekdays: readonly string[]
@@ -40,6 +44,8 @@ const MESSAGES: Record<Locale, Messages> = {
     previousMonth: 'Previous month',
     nextMonth: 'Next month',
     calendar: 'Calendar',
+    theme: 'Theme',
+    themes: { day: 'Day', night: 'Night', auto: 'As on this device' },
     timeIn: (city) => `Time in ${city}`,
     weekdays: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
     cities: { canada: 'Vancouver', ukraine: 'Kyiv', poland: 'Warsaw' },
@@ -58,6 +64,8 @@ const MESSAGES: Record<Locale, Messages> = {
     previousMonth: 'Попередній місяць',
     nextMonth: 'Наступний місяць',
     calendar: 'Календар',
+    theme: 'Тема',
+    themes: { day: 'День', night: 'Ніч', auto: 'Як на пристрої' },
     timeIn: (city) => `Час: ${city}`,
     weekdays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'],
     cities: { canada: 'Ванкувер', ukraine: 'Київ', poland: 'Варшава' },
@@ -76,6 +84,8 @@ const MESSAGES: Record<Locale, Messages> = {
     previousMonth: 'Poprzedni miesiąc',
     nextMonth: 'Następny miesiąc',
     calendar: 'Kalendarz',
+    theme: 'Motyw',
+    themes: { day: 'Dzień', night: 'Noc', auto: 'Jak w urządzeniu' },
     timeIn: (city) => `Czas: ${city}`,
     weekdays: ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'],
     cities: { canada: 'Vancouver', ukraine: 'Kijów', poland: 'Warszawa' },

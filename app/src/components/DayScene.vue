@@ -505,16 +505,14 @@ onUnmounted(() => clearTimeout(waiting))
   transform: scaleY(-1);
 }
 
-/* The night sky is nearly the dark page's own colour, so it needs an edge to stay a picture. */
-@media (prefers-color-scheme: dark) {
-  .scene::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 16%, transparent);
-    pointer-events: none;
-  }
+/* On the night page the night sky is nearly the page's own colour, so it needs an edge to stay a picture. */
+.scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--picture-edge);
+  pointer-events: none;
 }
 
 /* The colours by the horizon, warm where the sun rises and sets. */

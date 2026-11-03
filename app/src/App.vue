@@ -3,6 +3,7 @@ import DayControls from '@/components/DayControls.vue'
 import DayLine from '@/components/DayLine.vue'
 import MonthCalendar from '@/components/MonthCalendar.vue'
 import ShareActions from '@/components/ShareActions.vue'
+import ThemeSwitch from '@/components/ThemeSwitch.vue'
 import TimeReadout from '@/components/TimeReadout.vue'
 import { useTimeSelection } from '@/composables/useTimeSelection'
 import { findZone, ZONES } from '@/config/zones'
@@ -28,10 +29,13 @@ const primaryZone = homeZone ?? ZONES[0]!
 
 <template>
   <main class="page">
-    <h1 class="name">
-      <img class="emblem" src="/favicon.png" alt="" width="32" height="32" />
-      PLUACAN
-    </h1>
+    <header class="mast">
+      <h1 class="name">
+        <img class="emblem" src="/favicon.png" alt="" width="32" height="32" />
+        PLUACAN
+      </h1>
+      <ThemeSwitch />
+    </header>
 
     <div class="work">
       <div class="top">
@@ -82,6 +86,14 @@ const primaryZone = homeZone ?? ZONES[0]!
   max-width: 960px;
   margin: 0 auto;
   padding: max(14px, env(safe-area-inset-top)) 16px max(14px, env(safe-area-inset-bottom));
+}
+
+/* The name on the left, the theme switch on the right. */
+.mast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .name {
@@ -177,8 +189,11 @@ const primaryZone = homeZone ?? ZONES[0]!
     padding-bottom: 6px;
   }
 
-  /* No height to spare on a phone on its side, and the name is not what the screen is for. */
-  .name {
+  /*
+   * No height to spare on a phone on its side, and the name is not what the screen is for. The
+   * theme switch goes with it; the pick still holds.
+   */
+  .mast {
     display: none;
   }
 

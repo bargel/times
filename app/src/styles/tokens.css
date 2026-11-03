@@ -1,5 +1,10 @@
+/*
+ * The page follows the device, day or night, unless the reader picked one: the theme switch puts
+ * `data-theme="day"` or `"night"` on the page. Not light-dark(): the build turns it back into a
+ * media query for older browsers, and a pick would be lost there.
+ */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   /* Daylight: night-navy ink on a pale sky. */
   --ground: #f3f7fb;
@@ -9,6 +14,10 @@
   --sunset: #b5400d;
   --press: #2a3360;
   --selection: #ffd9ae;
+  /* Poland's white half has to stay visible on a pale ground. */
+  --flag-edge: color-mix(in srgb, var(--ink) 24%, transparent);
+  /* The picture's own night sky stands out on a pale page. */
+  --picture-edge: transparent;
 
   /* Figtree has no Cyrillic: Onest sets those letters, and loads only on a page that has them. */
   --font: 'Figtree Variable', 'Onest Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -19,9 +28,11 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Night, the same in both rules below: moonlit ink on the sky's own navy. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    /* Night: moonlit ink on the sky's own navy. */
+  :root:not([data-theme='day']) {
+    color-scheme: dark;
+
     --ground: #0c1029;
     --ink: #eef1fb;
     --ink-soft: #a7afcd;
@@ -29,5 +40,22 @@
     --sunset: #ffb27a;
     --press: #cdd3ea;
     --selection: #5b3a2a;
+    --flag-edge: color-mix(in srgb, var(--ink) 12%, transparent);
+    /* The night sky is nearly the page's own colour, so it needs an edge to stay a picture. */
+    --picture-edge: color-mix(in srgb, var(--ink) 16%, transparent);
   }
+}
+
+:root[data-theme='night'] {
+  color-scheme: dark;
+
+  --ground: #0c1029;
+  --ink: #eef1fb;
+  --ink-soft: #a7afcd;
+  --edge: #5f688f;
+  --sunset: #ffb27a;
+  --press: #cdd3ea;
+  --selection: #5b3a2a;
+  --flag-edge: color-mix(in srgb, var(--ink) 12%, transparent);
+  --picture-edge: color-mix(in srgb, var(--ink) 16%, transparent);
 }
