@@ -1,4 +1,5 @@
 import './keepUpdated'
+import './viewportProbe'
 
 import '@fontsource-variable/figtree/wght.css'
 import '@fontsource-variable/onest/wght.css'
