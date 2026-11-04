@@ -88,8 +88,9 @@ const primaryZone = homeZone ?? ZONES[0]!
   min-height: var(--held-height, 100dvh);
   max-width: 960px;
   margin: 0 auto;
-  padding: max(14px, env(safe-area-inset-top)) 16px
-    max(14px, var(--held-bottom, env(safe-area-inset-bottom)));
+  /* On a phone on its side, the rounded corners and the camera cut into the sides. */
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(14px, var(--held-bottom, env(safe-area-inset-bottom))) max(16px, env(safe-area-inset-left));
 }
 
 /* The name on the left, the theme switch on the right. */
@@ -189,8 +190,8 @@ const primaryZone = homeZone ?? ZONES[0]!
 
 @media (orientation: landscape) and (max-height: 500px) {
   .page {
-    padding-top: 8px;
-    padding-bottom: 6px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(6px, var(--held-bottom, env(safe-area-inset-bottom)));
   }
 
   /*
