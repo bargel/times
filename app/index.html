@@ -25,6 +25,22 @@
         // Storage off limits: the page follows the device.
       }
     </script>
+    <script>
+      // An installed copy on iOS gets its real height only a moment after it starts, so the page
+      // would jump: hold last launch's height from the first frame. See src/lib/heldViewport.ts.
+      try {
+        if (matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
+          var kept = JSON.parse(localStorage.getItem('pluacan-viewport') || 'null')
+          var held = kept && kept[innerWidth > innerHeight ? 'landscape' : 'portrait']
+          if (held && typeof held.height === 'number' && typeof held.bottom === 'number') {
+            document.documentElement.style.setProperty('--held-height', held.height + 'px')
+            document.documentElement.style.setProperty('--held-bottom', held.bottom + 'px')
+          }
+        }
+      } catch (blocked) {
+        // Nothing kept or storage off limits: the page takes the device's numbers as they come.
+      }
+    </script>
     <title>PLUACAN</title>
   </head>
   <body>

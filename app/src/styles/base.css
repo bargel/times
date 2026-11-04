@@ -35,8 +35,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* `--held-height`: last launch's height, held while an installed copy starts. See heldViewport.ts. */
 #app {
-  height: 100dvh;
+  height: var(--held-height, 100dvh);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: none;

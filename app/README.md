@@ -43,4 +43,6 @@ The page installs as an app (`vite-plugin-pwa`, set up in `vite.config.ts`) and 
 
 Nobody has to update by hand. After a deploy, an installed copy downloads the new version in the background, at start, whenever it comes back into view, and hourly while open. `src/lib/updates.ts` puts it in when the app is out of sight and still follows the clock, so a picked time on its way into Discord is never lost; closing the app fully also lets the next start open the new version. At worst someone sees the previous version once more.
 
+An installed copy on iOS learns its real height only about a tenth of a second after it starts, and the page stands low on the screen, so it would jump. `src/lib/heldViewport.ts` keeps each launch's height and bottom inset, and the script at the top of `index.html` holds them from the first frame of the next one; only the very first launch can still jump.
+
 If the service worker ever goes wrong, deploy once with `selfDestroying: true` in the `VitePWA` options: it removes the worker and its cache everywhere, and the page works as a plain site again.

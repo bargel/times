@@ -85,10 +85,11 @@ const primaryZone = homeZone ?? ZONES[0]!
 .page {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  min-height: var(--held-height, 100dvh);
   max-width: 960px;
   margin: 0 auto;
-  padding: max(14px, env(safe-area-inset-top)) 16px max(14px, env(safe-area-inset-bottom));
+  padding: max(14px, env(safe-area-inset-top)) 16px
+    max(14px, var(--held-bottom, env(safe-area-inset-bottom)));
 }
 
 /* The name on the left, the theme switch on the right. */
