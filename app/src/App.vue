@@ -8,6 +8,7 @@ import TimeReadout from '@/components/TimeReadout.vue'
 import { useTimeSelection } from '@/composables/useTimeSelection'
 import { findZone, ZONES } from '@/config/zones'
 import { browserTimeZone } from '@/lib/time'
+import { reportFollowsClock } from '@/lib/updates'
 
 const homeTimeZone = browserTimeZone()
 const {
@@ -22,6 +23,8 @@ const {
   beginEdit,
   cancelEdit,
 } = useTimeSelection(homeTimeZone)
+
+reportFollowsClock(() => isLive.value)
 
 const homeZone = findZone(homeTimeZone)
 const primaryZone = homeZone ?? ZONES[0]!

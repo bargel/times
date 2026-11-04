@@ -37,4 +37,10 @@ Add an entry to `ZONES` in `src/config/zones.ts`, and its flag to `src/assets/fl
 
 A push to `master` runs `.github/workflows/deploy.yml`: tests, typecheck and build, then GitHub Pages. If any check fails, nothing is deployed.
 
-Home-screen icons keep working as long as the address and `public/favicon.*` stay where they are. There is deliberately no service worker, so a new version reaches everyone the next time they open the page.
+## Installed copies and updates
+
+The page installs as an app (`vite-plugin-pwa`, set up in `vite.config.ts`) and opens from its own cache, also offline. Home-screen icons are `public/icon-*.png`, made from `public/favicon.png` by scaling it up without smoothing; make them again the same way if the emblem ever changes.
+
+Nobody has to update by hand. After a deploy, an installed copy downloads the new version in the background, at start, whenever it comes back into view, and hourly while open. `src/lib/updates.ts` puts it in when the app is out of sight and still follows the clock, so a picked time on its way into Discord is never lost; closing the app fully also lets the next start open the new version. At worst someone sees the previous version once more.
+
+If the service worker ever goes wrong, deploy once with `selfDestroying: true` in the `VitePWA` options: it removes the worker and its cache everywhere, and the page works as a plain site again.

@@ -1,3 +1,5 @@
+import './keepUpdated'
+
 import '@fontsource-variable/figtree/wght.css'
 import '@fontsource-variable/onest/wght.css'
 import './styles/tokens.css'
