@@ -2,14 +2,15 @@
 import { ref } from 'vue'
 
 import { t } from '@/lib/i18n'
+import { pageStorage } from '@/lib/storage'
 import { applyTheme, readTheme, saveTheme, THEMES, type Theme } from '@/lib/theme'
 
 /** The page already wears this pick: the script in index.html put it on before the first paint. */
-const picked = ref(readTheme(localStorage))
+const picked = ref(readTheme(pageStorage()))
 
 function pick(theme: Theme) {
   picked.value = theme
-  saveTheme(theme, localStorage)
+  saveTheme(theme, pageStorage())
   applyTheme(theme)
 }
 </script>

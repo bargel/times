@@ -65,11 +65,12 @@ export function useTimeSelection(homeTimeZone: string) {
   function selectDate(nextDate: string) {
     if (!isIsoDate(nextDate) || nextDate < FIRST_SELECTABLE_DATE) return
     // Keep the time on the clock, not the slot: days with a DST change have more or fewer slots.
-    // A picked time stays exact; the clock's own minute snaps to a slot, as the line does.
-    const kept = pick.value
-      ? instant.value
-      : axis.value.start + Math.floor(position.value) * SLOT_MS
-    const minute = atDayEnd.value ? DAY_MINUTES : minuteOfDay(wallClockAt(kept, homeTimeZone))
+    // A picked time stays exact; the clock's own minute goes to the nearest slot, where the line
+    // shows it, and from a quarter to midnight that is the 24:00 stop.
+    const liveSlot = Math.round(position.value)
+    const kept = pick.value ? instant.value : axis.value.start + liveSlot * SLOT_MS
+    const endsDay = pick.value ? atDayEnd.value : liveSlot === axis.value.slots
+    const minute = endsDay ? DAY_MINUTES : minuteOfDay(wallClockAt(kept, homeTimeZone))
     const nextAxis = dayAxis(nextDate, homeTimeZone)
     pick.value = {
       date: nextDate,

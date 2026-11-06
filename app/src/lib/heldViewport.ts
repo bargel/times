@@ -6,6 +6,8 @@
  * first frame, by the script at the top of `index.html`, and let go once the real ones match.
  */
 
+import { pageStorage } from './storage'
+
 /** Where the last launch's numbers are kept. The script in `index.html` reads it too: keep in step. */
 export const VIEWPORT_KEY = 'pluacan-viewport'
 
@@ -77,7 +79,7 @@ export function startHolding(): void {
     const style = getComputedStyle(gauge)
     return { height: Math.round(parseFloat(style.height)), bottom: Math.round(parseFloat(style.paddingBottom)) }
   }
-  const keep = () => keepHeld(localStorage, shapeOf(innerWidth, innerHeight), live())
+  const keep = () => keepHeld(pageStorage(), shapeOf(innerWidth, innerHeight), live())
 
   const heldHeight = parseFloat(root.style.getPropertyValue('--held-height'))
   if (!Number.isNaN(heldHeight)) {

@@ -69,6 +69,24 @@ describe('useTimeSelection', () => {
     stop()
   })
 
+  it('keeps the slot the line shows, the nearest one, when the date changes', () => {
+    vi.setSystemTime(utc('2026-10-31T10:29:00Z'))
+    const { instant, selectDate, stop } = selection('UTC')
+    selectDate('2026-12-25')
+    expect(instant.value).toBe(utc('2026-12-25T10:30:00Z'))
+    stop()
+  })
+
+  it('keeps the 24:00 stop the line shows from a quarter to midnight', () => {
+    vi.setSystemTime(utc('2026-10-31T23:50:00Z'))
+    const { atDayEnd, date, instant, selectDate, stop } = selection('UTC')
+    selectDate('2026-12-25')
+    expect(date.value).toBe('2026-12-25')
+    expect(atDayEnd.value).toBe(true)
+    expect(instant.value).toBe(utc('2026-12-26T00:00:00Z'))
+    stop()
+  })
+
   it.each([
     ['into a short day', '2027-03-27', '2027-03-28'],
     ['past a short day', '2027-03-28', '2027-03-29'],

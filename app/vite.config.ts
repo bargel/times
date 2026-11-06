@@ -34,8 +34,9 @@ export default defineConfig({
         globIgnores: [
           // The plugin adds the manifest's icons itself.
           'icon-*.png',
-          // Onest subsets for letters these three languages never use; fetched only if ever needed.
-          'assets/onest-{vietnamese,math,symbols}-*.woff2',
+          // Onest subsets the page never shows: letters these three languages never use, and the
+          // Latin ones, which Figtree before it already covers. Fetched only if ever needed.
+          'assets/onest-{vietnamese,math,symbols,latin,latin-ext}-*.woff2',
         ],
         // No fallback: the app has no routes of its own, and `/` comes from the precache as is.
         // Any other address on the domain gets the server's real answer, a 404 included.
